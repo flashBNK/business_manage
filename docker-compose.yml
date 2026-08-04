@@ -1,0 +1,50 @@
+networks:
+  microservices:
+    driver: bridge
+
+volumes:
+  auth_postgres_data:
+
+services:
+  auth_postgres:
+    image: postgres:17-alpine
+    container_name: auth_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${AUTH_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${AUTH_DB_PORT}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}"]
+      interval: 5s
+      retries: 5
+    networks:
+      - microservices
+
+  auth_service:
+    build:
+      context: .
+      dockerfile: auth_service/Dockerfile
+    container_name: auth_service
+    restart: unless-stopped
+    volumes:
+      - ./auth_service:/app/auth_service
+    environment:
+      APP_SECRET_KEY: ${AUTH_APP_SECRET_KEY}
+      DB_USER: ${AUTH_DB_USER}
+      DB_PASSWORD: ${AUTH_DB_PASSWORD}
+      DB_HOST: ${AUTH_DB_HOST}
+      DB_PORT: "5432"
+      DB_NAME: ${AUTH_DB_NAME}
+    ports:
+      - "${AUTH_SERVICE_PORT}:8000"
+    depends_on:
+      auth_postgres:
+        condition: service_healthy
+    networks:
+      - microservices
+ 
