@@ -1,12 +1,11 @@
 from dependency_injector.containers import DeclarativeContainer
-from dependency_injector.providers import Singleton
+from dependency_injector.providers import Singleton, Factory
 
 from infrastructure.databases.postgresql.session_manager import DatabaseSessionManager
+from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
 
 
 class Container(DeclarativeContainer):
-    """DI-контейнер auth_service."""
-
-    # user_uow_factory = Factory(PostgreSQLUserUnitOfWork)
+    uow_factory = Factory(PostgreSQLUnitOfWork)
 
     session_manager = Singleton(DatabaseSessionManager)

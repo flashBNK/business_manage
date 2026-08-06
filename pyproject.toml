@@ -18,7 +18,8 @@ dependencies = [
     "pydantic-settings (>=2.14.2,<3.0.0)",
     "dependency-injector (>=4.49.1,<5.0.0)",
     "structlog (>=26.1.0,<27.0.0)",
-    "pyyaml (>=6.0.3,<7.0.0)"
+    "pyyaml (>=6.0.3,<7.0.0)",
+    "email-validator (>=2.3.0,<3.0.0)"
 ]
 
 [tool.poetry]
