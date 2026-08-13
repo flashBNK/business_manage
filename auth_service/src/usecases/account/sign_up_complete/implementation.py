@@ -1,0 +1,66 @@
+from domain.account.exceptions import EmailNotFound, AccountAlreadyRegistered
+from domain.account.models import CompleteSignUpDTO
+from domain.company.models import CreateCompanyDTO
+from domain.member.models import CreateMemberDTO
+from domain.secret.models import CreateSecretDTO
+from domain.token.models import LoginResultDTO, TokenDTO, MembershipAdmission
+from domain.token.repository import AbstractTokenService
+from domain.user.models import CreateUserDTO
+from infrastructure.databases.postgresql.models.members import MemberRoles
+from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from .abstract import AbstractCompleteSignUpUseCase
+
+from logger import get_logger
+
+log = get_logger(__name__)
+
+class PostgreSQLCompleteSignUpUseCase(AbstractCompleteSignUpUseCase):
+    def __init__(self, uow: PostgreSQLUnitOfWork, token_service: AbstractTokenService):
+        self._uow = uow
+        self._token_service = token_service
+
+    async def execute(self, dto: CompleteSignUpDTO) -> LoginResultDTO:
+        company = None
+        member = None
+
+        async with self._uow as uow:
+            account = await uow.account.get_by_email(dto.email)
+            if account is None:
+                raise EmailNotFound
+
+            if await uow.secret.get_by_account_id(account.id):
+                raise AccountAlreadyRegistered
+
+            user = await uow.user.create(CreateUserDTO(first_name=dto.first_name, last_name=dto.last_name))
+            await uow.secret.create(CreateSecretDTO(account_id=account.id, user_id=user.id, password=dto.password))
+
+            if dto.company_name:
+                if await uow.company.get_by_name(company_dto=CreateCompanyDTO(name=dto.company_name)) is None:
+                    company = await uow.company.create(CreateCompanyDTO(name=dto.company_name))
+                    member = await uow.member.create(CreateMemberDTO(user_id=user.id, company_id=company.id, role=MemberRoles.ADMIN))
+
+            if company:
+                log.info(
+                    "Компания и администратор созданы",
+                    company_id=str(company.id),
+                    user_id=str(user.id),
+
+                )
+
+                payload = TokenDTO(
+                    subject=user.id,
+                    memberships=[MembershipAdmission(company_id=member.company_id, role=member.role)],
+                )
+            else:
+                log.info(
+                    "Пользователь создан",
+                    user_id=str(user.id),
+                )
+
+                payload = TokenDTO(
+                    subject=user.id,
+                    memberships=[],
+                )
+
+            access_token = self._token_service.create_access_token(payload=payload)
+            return LoginResultDTO(access_token=access_token)

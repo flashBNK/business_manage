@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
+from uuid import UUID
 
 
 from domain.abstract import AbstractRepository
 from .models import UserDTO, CreateUserDTO
 
 
-class AbstractUserRepository(AbstractRepository[UserDTO, int, CreateUserDTO], ABC):
+class AbstractUserRepository(AbstractRepository[UserDTO, UUID, CreateUserDTO], ABC):
     pass
 
     # @abstractmethod

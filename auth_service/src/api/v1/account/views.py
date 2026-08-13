@@ -1,14 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 
-from domain.account.exceptions import EmailIsUsed
-from domain.account.models import CreateAccountDTO, AccountDTO, ConfirmAccountDTO
+from domain.account.exceptions import EmailIsUsed, EmailNotFound, AccountAlreadyRegistered
+from domain.account.models import CreateAccountDTO, AccountDTO, ConfirmAccountDTO, CompleteSignUpDTO
 from domain.invite.exceptions import InvalidOrExpiredCode, TooManyAttempts
+from domain.secret.exceptions import WrongSecretPassword
+from domain.token.models import LoginDTO, TokenDTO
 from usecases.account.check_account.abstract import AbstractCheckAccountUseCase
 from usecases.account.confirm_account.abstract import AbstractConfirmAccountUseCase
+from usecases.account.login.abstract import AbstractLoginUseCase
+from usecases.account.sign_up_complete.abstract import AbstractCompleteSignUpUseCase
 
-from .dependencies import check_account_use_case, confirm_account_use_case
-from .models import CreateAccountSchema, AccountSchema, ConfirmAccountSchema
+from .dependencies import check_account_use_case, confirm_account_use_case, login_use_case, complete_sign_up_use_case
+from .models import CreateAccountSchema, AccountSchema, ConfirmAccountSchema, LoginSchema, LoginResultSchema, \
+    CompleteSingUpSchema
+from ..token_dependencies import get_current_token
 
 router = APIRouter()
 
@@ -48,6 +54,59 @@ async def confirm_account(
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc))
 
     return JSONResponse(_to_schema(account).model_dump(mode="json"), status_code=status.HTTP_201_CREATED)
+
+
+@router.post("/login", response_model=LoginSchema)
+async def login(
+        request: Request,
+        payload: LoginSchema,
+        usecase: AbstractLoginUseCase = Depends(login_use_case),
+) -> JSONResponse:
+    dto = LoginDTO(
+        email=payload.email,
+        password=payload.password,
+    )
+
+    try:
+        token = await usecase.execute(dto)
+    except (WrongSecretPassword, EmailNotFound):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+
+    return JSONResponse(LoginResultSchema(access_token=token.access_token).model_dump(mode="json"), status_code=status.HTTP_200_OK)
+
+
+@router.post("/sign-up-complete", response_model=LoginResultSchema)
+async def complete_sign_up(
+        request: Request,
+        payload: CompleteSingUpSchema,
+        usecase: AbstractCompleteSignUpUseCase = Depends(complete_sign_up_use_case)
+) -> JSONResponse:
+    dto = CompleteSignUpDTO(
+        email=payload.email,
+        password=payload.password,
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        company_name=payload.company_name,
+    )
+
+    try:
+        result = await usecase.execute(dto)
+    except (EmailNotFound, ) as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except AccountAlreadyRegistered as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
+
+    token = LoginResultSchema(access_token=result.access_token)
+
+    return JSONResponse(token.model_dump(mode="json"), status_code=status.HTTP_201_CREATED)
+
+
+@router.get("/me")
+async def me(
+        token: TokenDTO = Depends(get_current_token)
+) -> dict:
+    content = {"User": token.subject, "memberships": token.memberships}
+    return content
 
 
 def _to_schema(dto: AccountDTO):

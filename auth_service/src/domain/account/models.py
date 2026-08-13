@@ -19,3 +19,11 @@ class CreateAccountDTO:
 class ConfirmAccountDTO:
     email: str
     code: str
+
+@dataclass(slots=True)
+class CompleteSignUpDTO:
+    email: str
+    password: str
+    first_name: str
+    last_name: str
+    company_name: str

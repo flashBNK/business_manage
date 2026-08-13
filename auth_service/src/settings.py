@@ -60,6 +60,25 @@ class _DatabaseSettings(BaseSettings):
         )
 
 
+class _JWTSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=BASE_DIR.parent / "config" / ".env",
+        env_prefix="JWT_",
+        extra="ignore",
+    )
+
+    private_key_path: Path = BASE_DIR.parent / "config" / "keys" / "jwt-private.pem"
+    public_key_path: Path = BASE_DIR.parent / "config" / "keys" / "jwt-public.pem"
+    algorithm: str = "RS256"
+    access_lifetime: int = 15
+
+    def get_private_key(self) -> str:
+        return self.private_key_path.read_text()
+
+    def get_public_key(self) -> str:
+        return self.public_key_path.read_text()
+
+
 class _Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=BASE_DIR.parent / "config" / ".env",
@@ -67,6 +86,7 @@ class _Settings(BaseSettings):
     )
     app: _AppSettings
     database: _DatabaseSettings
+    jwt: _JWTSettings
 
     @classmethod
     def load(cls) -> "_Settings":
@@ -81,6 +101,7 @@ class _Settings(BaseSettings):
         return cls(
             app=_AppSettings(**data.get("app", {})),
             database=_DatabaseSettings(),
+            jwt=_JWTSettings(),
         )
 
 

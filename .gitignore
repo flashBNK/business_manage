@@ -1,3 +1,4 @@
 .env
 .idea
 .env.auth
+auth_service/config/keys/

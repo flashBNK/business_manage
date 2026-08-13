@@ -5,3 +5,11 @@ class EmailIsUsed(Exception):
 class AccountNotFound(Exception):
     def __init__(self):
         super().__init__(f'Account not found.')
+
+class EmailNotFound(Exception):
+    def __init__(self):
+        super().__init__(f'Email not found.')
+
+class AccountAlreadyRegistered(Exception):
+    def __init__(self):
+        super().__init__("Регистрация для этого аккаунта уже завершена.")
