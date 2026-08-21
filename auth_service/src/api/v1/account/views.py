@@ -4,12 +4,12 @@ from fastapi.responses import JSONResponse
 from domain.account.exceptions import EmailIsUsed, EmailNotFound, AccountAlreadyRegistered
 from domain.account.models import CreateAccountDTO, AccountDTO, ConfirmAccountDTO, CompleteSignUpDTO
 from domain.invite.exceptions import InvalidOrExpiredCode, TooManyAttempts
-from domain.secret.exceptions import WrongSecretPassword
+from domain.secret.exceptions import WrongSecretPassword, SecretNotFound
 from domain.token.models import LoginDTO, TokenDTO
-from usecases.account.check_account.abstract import AbstractCheckAccountUseCase
-from usecases.account.confirm_account.abstract import AbstractConfirmAccountUseCase
-from usecases.account.login.abstract import AbstractLoginUseCase
-from usecases.account.sign_up_complete.abstract import AbstractCompleteSignUpUseCase
+from usecases.registration.check_account.abstract import AbstractCheckAccountUseCase
+from usecases.registration.confirm_account.abstract import AbstractConfirmAccountUseCase
+from usecases.auth.login.abstract import AbstractLoginUseCase
+from usecases.registration.complete.abstract import AbstractCompleteSignUpUseCase
 
 from .dependencies import check_account_use_case, confirm_account_use_case, login_use_case, complete_sign_up_use_case
 from .models import CreateAccountSchema, AccountSchema, ConfirmAccountSchema, LoginSchema, LoginResultSchema, \
@@ -71,6 +71,8 @@ async def login(
         token = await usecase.execute(dto)
     except (WrongSecretPassword, EmailNotFound):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+    except SecretNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
     return JSONResponse(LoginResultSchema(access_token=token.access_token).model_dump(mode="json"), status_code=status.HTTP_200_OK)
 
@@ -86,7 +88,7 @@ async def complete_sign_up(
         password=payload.password,
         first_name=payload.first_name,
         last_name=payload.last_name,
-        company_name=payload.company_name,
+        company_name=payload.company_name if payload.company_name else None,
     )
 
     try:

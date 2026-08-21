@@ -1,4 +1,5 @@
 import uuid
+import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,7 +27,8 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
         db_invite = InviteModel(
             email=dto.email,
             code=dto.code,
-            expires_at=dto.expires_at
+            expires_at=dto.expires_at,
+            user_id=dto.user_id,
         )
 
 
@@ -56,6 +58,10 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
 
         if dto.attempts is not None:
             invite.attempts = dto.attempts
+        if dto.status is not None:
+            invite.status = dto.status
+            if dto.status == "accepted":
+                invite.accepted_at = datetime.datetime.now(datetime.UTC)
 
         await self._session.flush()
 
@@ -74,6 +80,14 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
         await self._session.flush()
 
 
+    async def get_by_code(self, code: str) -> InviteDTO | None:
+        stmt = select(InviteModel).where(InviteModel.code == code)
+        result = await self._session.execute(stmt)
+        invite = result.scalar_one_or_none()
+
+        return self._to_domain(invite)
+
+
     async def get(self, invite_id: uuid.UUID) -> InviteDTO:
         pass
 
@@ -88,4 +102,5 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
             status=invite.status,
             attempts=invite.attempts,
             accepted_at=invite.accepted_at,
+            user_id=invite.user_id,
         )

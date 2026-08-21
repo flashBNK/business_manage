@@ -19,14 +19,15 @@ class PostgreSQLCheckAccountUseCase(AbstractCheckAccountUseCase):
     async def execute(self, dto: CreateAccountDTO) -> None:
 
         async with self._uow as uow:
-            if await uow.account.get_by_email(dto.email):
+            account = await uow.account.get_by_email(dto.email)
+            if account:
                 raise EmailIsUsed(email=dto.email)
 
             code = f"{secrets.randbelow(1_000_000):06d}"
             dto_invite = CreateInviteDTO(
                 email=dto.email,
                 code=code,
-                expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=15)
+                expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=15),
             )
 
             await uow.invite.create(dto=dto_invite)

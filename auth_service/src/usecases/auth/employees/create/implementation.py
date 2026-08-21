@@ -1,0 +1,51 @@
+import datetime
+import secrets
+
+from domain.invite.models import CreateInviteDTO
+from domain.member.models import CreateMemberDTO, CreateEmployeeResultDTO, CreateEmployeeDTO
+from domain.account.exceptions import EmailIsUsed
+from domain.user.models import CreateUserDTO
+from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from .abstract import AbstractCreateEmployeeUseCase
+from logger import get_logger
+
+log = get_logger(__name__)
+
+
+class PostgreSQLCreateEmployeeUseCase(AbstractCreateEmployeeUseCase):
+    def __init__(self, uow: PostgreSQLUnitOfWork):
+        self._uow = uow
+
+    async def execute(self, dto: CreateEmployeeDTO) -> CreateEmployeeResultDTO:
+        async with self._uow as uow:
+            account = await uow.account.get_by_email(dto.email)
+            if account:
+                raise EmailIsUsed(email=dto.email)
+
+            user = await uow.user.create(CreateUserDTO(first_name=dto.first_name, last_name=dto.last_name))
+            invite = CreateInviteDTO(
+                email=dto.email,
+                code=secrets.token_urlsafe(32),
+                user_id=user.id,
+                expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=30),
+            )
+            invite = await uow.invite.create(invite)
+
+            member = CreateMemberDTO(
+                user_id=user.id,
+                company_id=dto.company_id,
+                role=dto.role,
+                invite_id=invite.id
+            )
+            member = await uow.member.create(member)
+
+            invite_link = f"http://127.0.0.1:8000/api/v1/employees/invite-complete?token={invite.code}"
+            log.info(
+                "Ссылка приглашение создана",
+                email=dto.email,
+                company_id=str(dto.company_id),
+                user_id=str(user.id),
+                invite_link=invite_link,
+            )
+
+        return CreateEmployeeResultDTO(user_id=user.id, member_id=member.id)

@@ -1,11 +1,12 @@
 import uuid
 
 from dataclasses import dataclass, field
+from infrastructure.databases.postgresql.models.members import MemberRoles
 
 @dataclass(slots=True)
 class MembershipAdmission:
     company_id: uuid.UUID
-    role: str
+    role: MemberRoles
 
 
 @dataclass(slots=True)

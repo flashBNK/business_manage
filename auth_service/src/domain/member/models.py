@@ -20,3 +20,17 @@ class CreateMemberDTO:
     company_id: uuid.UUID
     role: MemberRoles
     invite_id: uuid.UUID | None = None
+
+
+@dataclass(slots=True)
+class CreateEmployeeDTO:
+    email: str
+    first_name: str
+    last_name: str
+    company_id: uuid.UUID
+    role: MemberRoles = MemberRoles.MEMBER
+
+@dataclass(slots=True)
+class CreateEmployeeResultDTO:
+    user_id: uuid.UUID
+    member_id: uuid.UUID

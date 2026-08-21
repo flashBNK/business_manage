@@ -6,10 +6,10 @@ from infrastructure.databases.postgresql.session import get_async_session
 from infrastructure.di.injection import build_unit_of_work
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
 
-from usecases.account.check_account.implementation import PostgreSQLCheckAccountUseCase
-from usecases.account.confirm_account.implementation import PostgreSQLConfirmAccountUseCase
-from usecases.account.login.implementation import PostgreSQLLoginUseCase
-from usecases.account.sign_up_complete.implementation import PostgreSQLCompleteSignUpUseCase
+from usecases.registration.check_account.implementation import PostgreSQLCheckAccountUseCase
+from usecases.registration.confirm_account.implementation import PostgreSQLConfirmAccountUseCase
+from usecases.auth.login.implementation import PostgreSQLLoginUseCase
+from usecases.registration.complete.implementation import PostgreSQLCompleteSignUpUseCase
 
 
 def get_unit_of_work(

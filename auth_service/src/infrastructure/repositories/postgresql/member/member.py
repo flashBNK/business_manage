@@ -29,8 +29,8 @@ class PostgreSQLMemberRepository(AbstractMemberRepository):
 
 
     async def get_by_user_id(self, user_id: uuid.UUID) -> list[MemberDTO] | None:
-        query = select(MemberModel).where((MemberModel.user_id == user_id), MemberModel.is_active.is_(True))
-        result = await self._session.execute(query)
+        stmt = select(MemberModel).where((MemberModel.user_id == user_id), MemberModel.is_active.is_(True))
+        result = await self._session.execute(stmt)
         members = result.scalars().all()
 
         if not members:
@@ -39,12 +39,38 @@ class PostgreSQLMemberRepository(AbstractMemberRepository):
         return [self._to_domain(member) for member in members]
 
 
+    async def get_by_invite_id(self, invite_id: uuid.UUID) -> MemberDTO | None:
+        stmt = select(MemberModel).where((MemberModel.invite_id == invite_id), MemberModel.is_active.is_(True))
+        result = await self._session.execute(stmt)
+        member = result.scalar_one_or_none()
+
+        return member
+
+
+    async def activation_shift(self, member_id: uuid.UUID, flag: bool) -> MemberDTO | None:
+        stmt = select(MemberModel).where(MemberModel.id == member_id)
+        result = await self._session.execute(stmt)
+        member = result.scalar_one_or_none()
+
+        if not member:
+            return None
+
+        if flag:
+            member.is_active = True
+        else:
+            member.is_active = False
+
+        await self._session.flush()
+
+        return self._to_domain(member)
+
+
+
     async def delete(self, account_id: int) -> None:
         pass
 
     async def get(self, account_id: int) -> MemberDTO:
         pass
-
 
     @staticmethod
     def _to_domain(member: MemberModel) -> MemberDTO:

@@ -9,3 +9,7 @@ class TooManyAttempts(Exception):
 class InvalidOrExpiredCode(Exception):
     def __init__(self):
         super().__init__("Invalid or expired verification code.")
+
+class InviteAlreadyUsed(Exception):
+    def __init__(self):
+        super().__init__("Invite already used.")

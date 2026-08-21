@@ -14,15 +14,22 @@ class InviteDTO:
     expires_at: datetime | None
     status: InviteStatus
     accepted_at: datetime | None
+    user_id: uuid.UUID | None = None
 
 
 @dataclass(slots=True)
 class CreateInviteDTO:
     email: str
     code: str
+    user_id: uuid.UUID | None = None
     expires_at: datetime | None = None
 
 @dataclass(slots=True)
 class UpdateInviteDTO:
-    attempts: int
-    email: str
+    attempts: int | None = None
+    status: InviteStatus | None = None
+
+@dataclass(slots=True)
+class CompleteEmployeeInviteDTO:
+    invite_token: str
+    password: str

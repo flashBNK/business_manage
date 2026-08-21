@@ -9,3 +9,7 @@ class AbstractInviteRepository(ABC):
     @abstractmethod
     async def update(self, invite_id: int, dto: UpdateInviteDTO) -> InviteDTO:
         raise InviteNotFound
+
+    @abstractmethod
+    async def get_by_code(self, code: str) -> InviteDTO | None:
+        raise InviteNotFound

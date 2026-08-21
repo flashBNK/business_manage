@@ -12,4 +12,4 @@ class EmailNotFound(Exception):
 
 class AccountAlreadyRegistered(Exception):
     def __init__(self):
-        super().__init__("Регистрация для этого аккаунта уже завершена.")
+        super().__init__("Registration for this account has already been completed..")
