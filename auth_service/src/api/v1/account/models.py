@@ -16,6 +16,16 @@ class AccountSchema(BaseModel):
     is_verified: bool
     verified_at: datetime
 
+class ListAccountsSchema(BaseModel):
+    total: int
+    accounts: list[AccountSchema]
+
+class RequestEmailChangeSchema(BaseModel):
+    new_email: EmailStr
+
+class ConfirmSchema(BaseModel):
+    invite_code: str
+
 class ConfirmAccountSchema(BaseModel):
     email: EmailStr
     code: str

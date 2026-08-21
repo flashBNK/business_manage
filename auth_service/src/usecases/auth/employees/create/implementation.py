@@ -39,13 +39,12 @@ class PostgreSQLCreateEmployeeUseCase(AbstractCreateEmployeeUseCase):
             )
             member = await uow.member.create(member)
 
-            invite_link = f"http://127.0.0.1:8000/api/v1/employees/invite-complete?token={invite.code}"
             log.info(
                 "Ссылка приглашение создана",
                 email=dto.email,
                 company_id=str(dto.company_id),
                 user_id=str(user.id),
-                invite_link=invite_link,
+                invite_code=invite.code,
             )
 
         return CreateEmployeeResultDTO(user_id=user.id, member_id=member.id)

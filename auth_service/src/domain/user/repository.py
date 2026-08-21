@@ -3,12 +3,11 @@ from uuid import UUID
 
 
 from domain.abstract import AbstractRepository
-from .models import UserDTO, CreateUserDTO
+from .exceptions import UserNotFound
+from .models import UserDTO, CreateUserDTO, UpdateUserDTO
 
 
 class AbstractUserRepository(AbstractRepository[UserDTO, UUID, CreateUserDTO], ABC):
-    pass
-
-    # @abstractmethod
-    # async def find_by_filters(self, user_filters: UserFilterDTO) -> List[UserDTO]:
-    #     raise UserNotFound
+    @abstractmethod
+    async def update(self, dto: UpdateUserDTO, user_id: UUID) -> UserDTO:
+        raise UserNotFound

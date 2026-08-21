@@ -12,4 +12,8 @@ class EmailNotFound(Exception):
 
 class AccountAlreadyRegistered(Exception):
     def __init__(self):
-        super().__init__("Registration for this account has already been completed..")
+        super().__init__("Registration for this account has already been completed.")
+
+class AccountForbidden(Exception):
+    def __init__(self):
+        super().__init__("Account forbidden.")

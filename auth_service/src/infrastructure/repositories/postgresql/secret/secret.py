@@ -68,6 +68,17 @@ class PostgreSQLSecretRepository(AbstractSecretRepository):
         return self._to_domain(secret)
 
 
+    async def list_by_user_id(self, user_id: uuid.UUID) -> list[SecretDTO]:
+        stmt = select(SecretModel).where(SecretModel.user_id == user_id)
+        result = await self._session.execute(stmt)
+        secrets = result.scalars().all()
+
+        if not secrets:
+            return []
+
+        return [self._to_domain(secret=secret) for secret in secrets]
+
+
     @staticmethod
     def _to_domain(secret: SecretModel) -> SecretDTO:
         return SecretDTO(

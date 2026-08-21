@@ -1,3 +1,4 @@
+import uuid
 from abc import ABC, abstractmethod
 from uuid import UUID
 
@@ -15,6 +16,5 @@ class AbstractSecretRepository(AbstractRepository[SecretDTO, UUID, CreateSecretD
     async def get_by_account_id(self, account_id) -> SecretDTO | None:
         raise SecretNotFound
 
-    # @abstractmethod
-    # async def find_by_filters(self, filters: FilterDTO) -> List[DTO]:
-    #     raise NotFound
+    async def list_by_user_id(self, user_id: uuid.UUID) -> list[SecretDTO]:
+        raise SecretNotFound

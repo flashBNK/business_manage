@@ -1,8 +1,10 @@
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from domain.user.models import UserDTO, CreateUserDTO
+from domain.user.exceptions import UserNotFound
+from domain.user.models import UserDTO, CreateUserDTO, UpdateUserDTO
 from domain.user.repository import AbstractUserRepository
 from infrastructure.databases.postgresql.models.user import User as UserModel
 
@@ -18,6 +20,24 @@ class PostgreSQLUserRepository(AbstractUserRepository):
         await self._session.flush()
         return self._to_domain(db_user)
 
+
+    async def update(self, dto: UpdateUserDTO, user_id: uuid.UUID) -> UserDTO:
+        stmt = select(UserModel).where(UserModel.id == user_id)
+        result = await self._session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise UserNotFound
+
+        if dto.first_name:
+            user.first_name = dto.first_name
+        if dto.last_name:
+            user.last_name = dto.last_name
+
+        self._session.add(user)
+        await self._session.flush()
+
+        return self._to_domain(user)
 
     async def get(self, user_id: uuid.UUID) -> UserDTO:
         pass

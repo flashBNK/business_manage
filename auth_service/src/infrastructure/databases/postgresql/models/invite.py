@@ -22,6 +22,7 @@ class Invite(Base):
     code: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), index=True, nullable=True, default=None)
+    account_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"), index=True, nullable=True, default=None,)
     status: Mapped[InviteStatus] = mapped_column(Enum(InviteStatus, values_callable=lambda x: [e.value for e in x], native_enum=False), default=InviteStatus.PENDING)
     attempts: Mapped[int] = mapped_column(default=0)
     accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None, nullable=True)

@@ -29,6 +29,7 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
             code=dto.code,
             expires_at=dto.expires_at,
             user_id=dto.user_id,
+            account_id=dto.account_id,
         )
 
 
@@ -88,6 +89,17 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
         return self._to_domain(invite)
 
 
+    async def get_by_account_id(self, account_id: uuid.UUID) -> InviteDTO | None:
+        stmt = select(InviteModel).where(InviteModel.account_id == account_id)
+        result = await self._session.execute(stmt)
+        invite = result.scalar_one_or_none()
+
+        if not invite:
+            raise None
+
+        return self._to_domain(invite)
+
+
     async def get(self, invite_id: uuid.UUID) -> InviteDTO:
         pass
 
@@ -103,4 +115,5 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
             attempts=invite.attempts,
             accepted_at=invite.accepted_at,
             user_id=invite.user_id,
+            account_id=invite.account_id,
         )

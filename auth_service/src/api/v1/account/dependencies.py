@@ -5,7 +5,10 @@ from container import Container
 from infrastructure.databases.postgresql.session import get_async_session
 from infrastructure.di.injection import build_unit_of_work
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from usecases.profile.confirm_update_account.implementation import PostgreSQLConfirmUpdateAccountUseCase
 
+from usecases.profile.list_accounts_user.implementation import PostgreSQLListAccountsUserUseCase
+from usecases.profile.update_account.implementation import PostgreSQLUpdateAccountUseCase
 from usecases.registration.check_account.implementation import PostgreSQLCheckAccountUseCase
 from usecases.registration.confirm_account.implementation import PostgreSQLConfirmAccountUseCase
 from usecases.auth.login.implementation import PostgreSQLLoginUseCase
@@ -44,3 +47,22 @@ def complete_sign_up_use_case(
     uow = get_unit_of_work(session=session)
     token_service = Container.token_service()
     return PostgreSQLCompleteSignUpUseCase(uow=uow, token_service=token_service)
+
+def list_accounts_user_use_case(
+    session: AsyncSession = Depends(get_async_session)
+):
+    uow = get_unit_of_work(session=session)
+    token_service = Container.token_service()
+    return PostgreSQLListAccountsUserUseCase(uow=uow, token_service=token_service)
+
+def update_account_use_case(
+    session: AsyncSession = Depends(get_async_session)
+):
+    uow = get_unit_of_work(session=session)
+    return PostgreSQLUpdateAccountUseCase(uow=uow)
+
+def confirm_update_account_use_case(
+    session: AsyncSession = Depends(get_async_session)
+):
+    uow = get_unit_of_work(session=session)
+    return PostgreSQLConfirmUpdateAccountUseCase(uow=uow)

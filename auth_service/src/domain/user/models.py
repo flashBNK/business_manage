@@ -18,3 +18,9 @@ class UserDTO:
 class CreateUserDTO:
     first_name: str
     last_name: str
+
+
+@dataclass(slots=True)
+class UpdateUserDTO:
+    first_name: str | None = None
+    last_name: str | None = None

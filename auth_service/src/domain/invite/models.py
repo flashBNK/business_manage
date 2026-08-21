@@ -15,6 +15,7 @@ class InviteDTO:
     status: InviteStatus
     accepted_at: datetime | None
     user_id: uuid.UUID | None = None
+    account_id: uuid.UUID | None = None
 
 
 @dataclass(slots=True)
@@ -22,6 +23,7 @@ class CreateInviteDTO:
     email: str
     code: str
     user_id: uuid.UUID | None = None
+    account_id: uuid.UUID | None = None
     expires_at: datetime | None = None
 
 @dataclass(slots=True)

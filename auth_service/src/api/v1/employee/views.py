@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 
-from domain.account.exceptions import EmailIsUsed, EmailNotFound, AccountAlreadyRegistered
+from domain.account.exceptions import EmailIsUsed
 from domain.invite.exceptions import InvalidOrExpiredCode, InviteAlreadyUsed
 from domain.invite.models import CompleteEmployeeInviteDTO
 from domain.member.models import CreateEmployeeDTO
