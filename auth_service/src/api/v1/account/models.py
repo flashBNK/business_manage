@@ -43,6 +43,11 @@ class TokenSchema(BaseModel):
 
 class LoginResultSchema(BaseModel):
     access_token: str
+    refresh_token: str
+
+
+class RefreshSchema(BaseModel):
+    refresh_token: str
 
 
 class CompleteSingUpSchema(BaseModel):

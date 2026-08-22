@@ -18,6 +18,7 @@ class TokenDTO:
 @dataclass(slots=True)
 class LoginResultDTO:
     access_token: str
+    refresh_token: str
 
 
 @dataclass(slots=True)

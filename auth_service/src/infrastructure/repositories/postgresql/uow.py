@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .account.account import PostgreSQLAccountRepository
 from .invite.invite import PostgreSQLInviteRepository
+from .refresh_token.refresh_token import PostgreSQLRefreshTokenRepository
 from .secret.secret import PostgreSQLSecretRepository
 from .member.member import PostgreSQLMemberRepository
 from .company.company import PostgreSQLCompanyRepository
@@ -19,6 +20,7 @@ class PostgreSQLUnitOfWork:
         self.member: PostgreSQLMemberRepository | None = None
         self.company: PostgreSQLCompanyRepository | None = None
         self.user: PostgreSQLUserRepository | None = None
+        self.refresh_token: PostgreSQLRefreshTokenRepository | None = None
 
     async def __aenter__(self):
         self.account = PostgreSQLAccountRepository(self._session)
@@ -27,6 +29,7 @@ class PostgreSQLUnitOfWork:
         self.member = PostgreSQLMemberRepository(self._session)
         self.company = PostgreSQLCompanyRepository(self._session)
         self.user = PostgreSQLUserRepository(self._session)
+        self.refresh_token = PostgreSQLRefreshTokenRepository(self._session)
         return self
 
     async def __aexit__(self, exc_type: Exception | None, exc_val, traceback):
@@ -41,6 +44,7 @@ class PostgreSQLUnitOfWork:
         self.member = None
         self.company = None
         self.user = None
+        self.refresh_token = None
 
     async def commit(self):
         await self._session.commit()

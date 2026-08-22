@@ -40,7 +40,7 @@ class PostgreSQLSecretRepository(AbstractSecretRepository):
         await self._session.flush()
 
 
-    async def get(self, invite_id: uuid.UUID) -> SecretDTO:
+    async def get(self, secret_id: uuid.UUID) -> SecretDTO:
         pass
 
     async def check_and_get_by_account_id(self, account_id: int, password: str) -> SecretDTO:

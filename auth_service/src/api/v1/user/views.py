@@ -18,7 +18,7 @@ router = APIRouter()
 
 @router.patch("/me", response_model=UserDTO)
 async def update_user(
-        request: Request,
+        _request: Request,
         payload: UpdateUserSchema,
         token: TokenDTO = Depends(get_current_token),
         usecase: AbstractUpdateUserUseCase = Depends(update_user_use_case),

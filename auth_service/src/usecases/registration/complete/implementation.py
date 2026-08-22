@@ -2,6 +2,7 @@ from domain.account.exceptions import EmailNotFound, AccountAlreadyRegistered
 from domain.account.models import CompleteSignUpDTO
 from domain.company.models import CreateCompanyDTO
 from domain.member.models import CreateMemberDTO
+from domain.refresh_token.issue_tokens import issue_token_pair
 from domain.secret.models import CreateSecretDTO
 from domain.token.models import LoginResultDTO, TokenDTO, MembershipAdmission
 from domain.token.repository import AbstractTokenService
@@ -62,5 +63,4 @@ class PostgreSQLCompleteSignUpUseCase(AbstractCompleteSignUpUseCase):
                     memberships=[],
                 )
 
-            access_token = self._token_service.create_access_token(payload=payload)
-            return LoginResultDTO(access_token=access_token)
+            return await issue_token_pair(uow=uow, payload=payload, token_service=self._token_service)

@@ -5,6 +5,8 @@ from container import Container
 from infrastructure.databases.postgresql.session import get_async_session
 from infrastructure.di.injection import build_unit_of_work
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from usecases.auth.logout.implementation import PostgreSQLLogoutUseCase
+from usecases.auth.refresh.implementation import PostgreSQLRefreshUseCase
 from usecases.profile.confirm_update_account.implementation import PostgreSQLConfirmUpdateAccountUseCase
 
 from usecases.profile.list_accounts_user.implementation import PostgreSQLListAccountsUserUseCase
@@ -66,3 +68,16 @@ def confirm_update_account_use_case(
 ):
     uow = get_unit_of_work(session=session)
     return PostgreSQLConfirmUpdateAccountUseCase(uow=uow)
+
+def refresh_use_case(
+    session: AsyncSession = Depends(get_async_session)
+):
+    uow = get_unit_of_work(session=session)
+    token_service = Container.token_service()
+    return PostgreSQLRefreshUseCase(uow=uow, token_service=token_service)
+
+def logout_use_case(
+    session: AsyncSession = Depends(get_async_session)
+):
+    uow = get_unit_of_work(session=session)
+    return PostgreSQLLogoutUseCase(uow=uow)

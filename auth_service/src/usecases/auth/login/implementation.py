@@ -1,6 +1,6 @@
+from domain.refresh_token.issue_tokens import issue_token_pair
 from domain.token.models import LoginDTO, TokenDTO, MembershipAdmission, LoginResultDTO
 from domain.account.exceptions import EmailNotFound
-from domain.secret.exceptions import WrongSecretPassword
 from domain.token.repository import AbstractTokenService
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
 from .abstract import AbstractLoginUseCase
@@ -25,17 +25,15 @@ class PostgreSQLLoginUseCase(AbstractLoginUseCase):
 
             members = await uow.member.get_by_user_id(user_id=secret.user_id)
 
-        payload = TokenDTO(
-            subject=secret.user_id,
-            memberships=[
-                MembershipAdmission(
-                    company_id=member.company_id,
-                    role=member.role,
-                )
-                for member in members
-            ]
-        )
+            payload = TokenDTO(
+                subject=secret.user_id,
+                memberships=[
+                    MembershipAdmission(
+                        company_id=member.company_id,
+                        role=member.role,
+                    )
+                    for member in members
+                ]
+            )
 
-        access_token = self._token_service.create_access_token(payload=payload)
-        return LoginResultDTO(access_token=access_token)
-
+            return await issue_token_pair(uow=uow, payload=payload, token_service=self._token_service)

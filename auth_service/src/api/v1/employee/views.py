@@ -8,51 +8,47 @@ from domain.invite.exceptions import InvalidOrExpiredCode, InviteAlreadyUsed
 from domain.invite.models import CompleteEmployeeInviteDTO
 from domain.member.models import CreateEmployeeDTO
 from domain.token.models import TokenDTO
+from infrastructure.databases.postgresql.models.members import MemberRoles
 from usecases.auth.employees.complete_invite.abstract import AbstractCompleteEmployeeInviteUseCase
 from usecases.auth.employees.create.abstract import AbstractCreateEmployeeUseCase
 from .models import CreateEmployeeSchema, CreateEmployeeResultSchema, CompleteEmployeeInviteSchema
 
 from .dependencies import create_employee_use_case, complete_employee_invite_use_case
 from ..account.models import LoginResultSchema
-from ..token_dependencies import get_current_token
+from ..authorization import require_company_role
 
 router = APIRouter()
 
 
 @router.post("/companies/{company_id}/employees", response_model=CreateEmployeeResultSchema)
 async def create_employee(
-        request: Request,
+        _request: Request,
         company_id: uuid.UUID,
         payload: CreateEmployeeSchema,
-        token: TokenDTO = Depends(get_current_token),
+        _token: TokenDTO = Depends(require_company_role(MemberRoles.ADMIN)),
         usecase: AbstractCreateEmployeeUseCase = Depends(create_employee_use_case),
 ) -> JSONResponse:
+    dto = CreateEmployeeDTO(
+        email=payload.email,
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        company_id=company_id,
+        role=payload.role,
+    )
 
-    for membership in token.memberships:
-        if membership.company_id == company_id and membership.role == "admin":
-            dto = CreateEmployeeDTO(
-                email=payload.email,
-                first_name=payload.first_name,
-                last_name=payload.last_name,
-                company_id=company_id,
-                role=payload.role,
-            )
+    try:
+        result = await usecase.execute(dto)
+    except EmailIsUsed as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
 
-            try:
-                result = await usecase.execute(dto)
-            except EmailIsUsed as exc:
-                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
+    result_schema = CreateEmployeeResultSchema(user_id=result.user_id, member_id=result.member_id)
 
-            result_schema = CreateEmployeeResultSchema(user_id=result.user_id, member_id=result.member_id)
-
-            return JSONResponse(result_schema.model_dump(mode="json"), status_code=status.HTTP_201_CREATED)
-
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access to the requested resource is denied.")
+    return JSONResponse(result_schema.model_dump(mode="json"), status_code=status.HTTP_201_CREATED)
 
 
 @router.post("/employees/invite-complete", response_model=CreateEmployeeResultSchema)
 async def invite_complete(
-        request: Request,
+        _request: Request,
         payload: CompleteEmployeeInviteSchema,
         usecase: AbstractCompleteEmployeeInviteUseCase = Depends(complete_employee_invite_use_case),
 ) -> JSONResponse:
@@ -68,6 +64,6 @@ async def invite_complete(
     except InviteAlreadyUsed as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc))
 
-    result_schema = LoginResultSchema(access_token=result.access_token)
+    result_schema = LoginResultSchema(access_token=result.access_token, refresh_token=result.refresh_token)
 
     return JSONResponse(result_schema.model_dump(mode="json"), status_code=status.HTTP_201_CREATED)

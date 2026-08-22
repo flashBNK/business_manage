@@ -3,6 +3,7 @@ import datetime
 from domain.account.models import CreateAccountDTO
 from domain.invite.exceptions import InviteAlreadyUsed, InvalidOrExpiredCode
 from domain.invite.models import UpdateInviteDTO, CompleteEmployeeInviteDTO
+from domain.refresh_token.issue_tokens import issue_token_pair
 from domain.secret.models import CreateSecretDTO
 from domain.token.models import TokenDTO, MembershipAdmission, LoginResultDTO
 from domain.token.repository import AbstractTokenService
@@ -33,7 +34,7 @@ class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseC
                 CreateAccountDTO(email=invite.email)
             )
 
-            secret = await uow.secret.create(
+            await uow.secret.create(
                 CreateSecretDTO(
                     password=dto.password,
                     user_id=invite.user_id,
@@ -55,10 +56,9 @@ class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseC
                 company_id=str(member.company_id),
             )
 
-        payload = TokenDTO(
-            subject=invite.user_id,
-            memberships=[MembershipAdmission(company_id=member.company_id, role=member.role)],
-        )
+            payload = TokenDTO(
+                subject=invite.user_id,
+                memberships=[MembershipAdmission(company_id=member.company_id, role=member.role)],
+            )
 
-        access_token = self._token_service.create_access_token(payload=payload)
-        return LoginResultDTO(access_token=access_token)
+            return await issue_token_pair(uow=uow, payload=payload, token_service=self._token_service)

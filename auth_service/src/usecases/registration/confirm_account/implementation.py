@@ -27,7 +27,7 @@ class PostgreSQLConfirmAccountUseCase(AbstractConfirmAccountUseCase):
                 raise TooManyAttempts
             if invite.code != dto.code:
                 invite.attempts += 1
-                await uow.invite.update(UpdateInviteDTO(attempts=invite.attempts))
+                await uow.invite.update(invite_id=invite.id, dto=UpdateInviteDTO(attempts=invite.attempts))
                 log.warning("Неверный код подтверждения", email=dto.email, attempts=invite.attempts)
                 raise InvalidOrExpiredCode
 
