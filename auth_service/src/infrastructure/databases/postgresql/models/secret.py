@@ -1,7 +1,7 @@
-from datetime import UTC, datetime
 import uuid
+from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, String, ForeignKey
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..base import Base
@@ -15,4 +15,8 @@ class Secret(Base):
     account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"), unique=True)
     password_hash: Mapped[str] = mapped_column(String(511))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )

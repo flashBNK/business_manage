@@ -1,7 +1,8 @@
 import uuid
-
 from dataclasses import dataclass, field
+
 from infrastructure.databases.postgresql.models.members import MemberRoles
+
 
 @dataclass(slots=True)
 class MembershipAdmission:

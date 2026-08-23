@@ -26,10 +26,12 @@ class CreateInviteDTO:
     account_id: uuid.UUID | None = None
     expires_at: datetime | None = None
 
+
 @dataclass(slots=True)
 class UpdateInviteDTO:
     attempts: int | None = None
     status: InviteStatus | None = None
+
 
 @dataclass(slots=True)
 class CompleteEmployeeInviteDTO:

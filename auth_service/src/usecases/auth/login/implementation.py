@@ -1,10 +1,11 @@
-from domain.refresh_token.issue_tokens import issue_token_pair
-from domain.token.models import LoginDTO, TokenDTO, MembershipAdmission, LoginResultDTO
 from domain.account.exceptions import EmailNotFound
+from domain.refresh_token.issue_tokens import issue_token_pair
+from domain.token.models import LoginDTO, LoginResultDTO, MembershipAdmission, TokenDTO
 from domain.token.repository import AbstractTokenService
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
-from .abstract import AbstractLoginUseCase
 from logger import get_logger
+
+from .abstract import AbstractLoginUseCase
 
 log = get_logger(__name__)
 
@@ -33,7 +34,7 @@ class PostgreSQLLoginUseCase(AbstractLoginUseCase):
                         role=member.role,
                     )
                     for member in members
-                ]
+                ],
             )
 
             return await issue_token_pair(uow=uow, payload=payload, token_service=self._token_service)

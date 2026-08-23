@@ -40,3 +40,22 @@ dev = [
     "httpx (>=0.28.1,<0.29.0)",
     "pre-commit (>=4.6.1,<5.0.0)"
 ]
+
+[tool.ruff]
+line-length = 119
+target-version = "py313"
+
+[tool.ruff.lint]
+
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501", "B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+pythonpath = ["src"]
+testpaths = ["srt/dogs/tests"]
+env_files = [".env"]

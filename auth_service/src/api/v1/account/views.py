@@ -1,57 +1,87 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse
-
-from domain.account.exceptions import EmailIsUsed, EmailNotFound, AccountAlreadyRegistered, AccountNotFound, \
-    AccountForbidden
-from domain.account.models import CreateAccountDTO, AccountDTO, ConfirmAccountDTO, CompleteSignUpDTO, \
-    RequestEmailChangeDTO, ConfirmEmailChangeDTO
+from domain.account.exceptions import (
+    AccountAlreadyRegistered,
+    AccountForbidden,
+    AccountNotFound,
+    EmailIsUsed,
+    EmailNotFound,
+)
+from domain.account.models import (
+    AccountDTO,
+    CompleteSignUpDTO,
+    ConfirmAccountDTO,
+    ConfirmEmailChangeDTO,
+    CreateAccountDTO,
+    RequestEmailChangeDTO,
+)
 from domain.invite.exceptions import InvalidOrExpiredCode, TooManyAttempts
 from domain.refresh_token.exceptions import InvalidRefreshToken
-from domain.secret.exceptions import WrongSecretPassword, SecretNotFound
+from domain.secret.exceptions import SecretNotFound, WrongSecretPassword
 from domain.token.models import LoginDTO, TokenDTO
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import JSONResponse
+from usecases.auth.login.abstract import AbstractLoginUseCase
 from usecases.auth.logout.abstract import AbstractLogoutUseCase
 from usecases.auth.refresh.abstract import AbstractRefreshUseCase
-from usecases.profile.confirm_update_account.abstract import AbstractConfirmUpdateAccountUseCase
+from usecases.profile.confirm_update_account.abstract import (
+    AbstractConfirmUpdateAccountUseCase,
+)
 from usecases.profile.list_accounts_user.abstract import AbstractListAccountsUserUseCase
 from usecases.profile.update_account.abstract import AbstractUpdateAccountUseCase
 from usecases.registration.check_account.abstract import AbstractCheckAccountUseCase
-from usecases.registration.confirm_account.abstract import AbstractConfirmAccountUseCase
-from usecases.auth.login.abstract import AbstractLoginUseCase
 from usecases.registration.complete.abstract import AbstractCompleteSignUpUseCase
+from usecases.registration.confirm_account.abstract import AbstractConfirmAccountUseCase
 
-from .dependencies import check_account_use_case, confirm_account_use_case, login_use_case, complete_sign_up_use_case, \
-    list_accounts_user_use_case, update_account_use_case, confirm_update_account_use_case, refresh_use_case, \
-    logout_use_case
-from .models import CreateAccountSchema, AccountSchema, ConfirmAccountSchema, LoginSchema, LoginResultSchema, \
-    CompleteSingUpSchema, ListAccountsSchema, RequestEmailChangeSchema, ConfirmSchema, RefreshSchema
 from ..token_dependencies import get_current_token
+from .dependencies import (
+    check_account_use_case,
+    complete_sign_up_use_case,
+    confirm_account_use_case,
+    confirm_update_account_use_case,
+    list_accounts_user_use_case,
+    login_use_case,
+    logout_use_case,
+    refresh_use_case,
+    update_account_use_case,
+)
+from .models import (
+    AccountSchema,
+    CompleteSingUpSchema,
+    ConfirmAccountSchema,
+    ConfirmSchema,
+    CreateAccountSchema,
+    ListAccountsSchema,
+    LoginResultSchema,
+    LoginSchema,
+    RefreshSchema,
+    RequestEmailChangeSchema,
+)
 
 router = APIRouter()
 
 
 @router.post("/check_account", response_model=CreateAccountSchema)
 async def check_account(
-        _request: Request,
-        payload: CreateAccountSchema,
-        usecase: AbstractCheckAccountUseCase = Depends(check_account_use_case),
+    _request: Request,
+    payload: CreateAccountSchema,
+    usecase: AbstractCheckAccountUseCase = Depends(check_account_use_case),
 ) -> JSONResponse:
     dto = CreateAccountDTO(email=payload.email)
 
     try:
         await usecase.execute(dto)
     except EmailIsUsed as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
 
     return JSONResponse({}, status_code=status.HTTP_201_CREATED)
 
 
 @router.post("/sign-up", response_model=AccountSchema)
 async def confirm_account(
-        _request: Request,
-        payload: ConfirmAccountSchema,
-        usecase: AbstractConfirmAccountUseCase = Depends(confirm_account_use_case),
+    _request: Request,
+    payload: ConfirmAccountSchema,
+    usecase: AbstractConfirmAccountUseCase = Depends(confirm_account_use_case),
 ) -> JSONResponse:
     dto = ConfirmAccountDTO(
         email=payload.email,
@@ -61,18 +91,18 @@ async def confirm_account(
     try:
         account = await usecase.execute(dto)
     except InvalidOrExpiredCode as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from None
     except TooManyAttempts as exc:
-        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc))
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from None
 
     return JSONResponse(_to_schema(account).model_dump(mode="json"), status_code=status.HTTP_201_CREATED)
 
 
 @router.post("/login", response_model=LoginSchema)
 async def login(
-        _request: Request,
-        payload: LoginSchema,
-        usecase: AbstractLoginUseCase = Depends(login_use_case),
+    _request: Request,
+    payload: LoginSchema,
+    usecase: AbstractLoginUseCase = Depends(login_use_case),
 ) -> JSONResponse:
     dto = LoginDTO(
         email=payload.email,
@@ -82,9 +112,9 @@ async def login(
     try:
         token = await usecase.execute(dto)
     except (WrongSecretPassword, EmailNotFound):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password") from None
     except SecretNotFound as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
 
     content = LoginResultSchema(access_token=token.access_token, refresh_token=token.refresh_token)
 
@@ -93,9 +123,9 @@ async def login(
 
 @router.post("/sign-up-complete", response_model=LoginResultSchema)
 async def complete_sign_up(
-        _request: Request,
-        payload: CompleteSingUpSchema,
-        usecase: AbstractCompleteSignUpUseCase = Depends(complete_sign_up_use_case)
+    _request: Request,
+    payload: CompleteSingUpSchema,
+    usecase: AbstractCompleteSignUpUseCase = Depends(complete_sign_up_use_case),
 ) -> JSONResponse:
     dto = CompleteSignUpDTO(
         email=payload.email,
@@ -107,10 +137,10 @@ async def complete_sign_up(
 
     try:
         result = await usecase.execute(dto)
-    except (EmailNotFound, ) as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except EmailNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
     except AccountAlreadyRegistered as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
 
     token = LoginResultSchema(access_token=result.access_token, refresh_token=result.refresh_token)
 
@@ -118,19 +148,16 @@ async def complete_sign_up(
 
 
 @router.get("/me")
-async def me(
-        _request: Request,
-        token: TokenDTO = Depends(get_current_token)
-) -> dict:
+async def me(_request: Request, token: TokenDTO = Depends(get_current_token)) -> dict:
     content = {"User": token.subject, "memberships": token.memberships}
     return content
 
 
 @router.get("/me/accounts", response_model=ListAccountsSchema)
 async def list_accounts_user(
-        _request: Request,
-        token: TokenDTO = Depends(get_current_token),
-        usecase: AbstractListAccountsUserUseCase = Depends(list_accounts_user_use_case),
+    _request: Request,
+    token: TokenDTO = Depends(get_current_token),
+    usecase: AbstractListAccountsUserUseCase = Depends(list_accounts_user_use_case),
 ) -> JSONResponse:
     accounts, total = await usecase.execute(user_id=token.subject)
 
@@ -144,11 +171,11 @@ async def list_accounts_user(
 
 @router.post("/account/{account_id}")
 async def update_account(
-        _request: Request,
-        account_id: uuid.UUID,
-        payload: RequestEmailChangeSchema,
-        token: TokenDTO = Depends(get_current_token),
-        usecase: AbstractUpdateAccountUseCase = Depends(update_account_use_case)
+    _request: Request,
+    account_id: uuid.UUID,
+    payload: RequestEmailChangeSchema,
+    token: TokenDTO = Depends(get_current_token),
+    usecase: AbstractUpdateAccountUseCase = Depends(update_account_use_case),
 ) -> JSONResponse:
     dto = RequestEmailChangeDTO(
         user_id=token.subject,
@@ -158,22 +185,22 @@ async def update_account(
     try:
         await usecase.execute(dto=dto, account_id=account_id)
     except AccountNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found") from None
     except AccountForbidden as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=exc)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=exc) from None
     except EmailIsUsed as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
 
     return JSONResponse({}, status_code=status.HTTP_201_CREATED)
 
 
 @router.post("/account/{account_id}/update-complete", response_model=AccountSchema)
 async def update_account_complete(
-        _request: Request,
-        account_id: uuid.UUID,
-        payload: ConfirmSchema,
-        token: TokenDTO = Depends(get_current_token),
-        usecase: AbstractConfirmUpdateAccountUseCase = Depends(confirm_update_account_use_case)
+    _request: Request,
+    account_id: uuid.UUID,
+    payload: ConfirmSchema,
+    token: TokenDTO = Depends(get_current_token),
+    usecase: AbstractConfirmUpdateAccountUseCase = Depends(confirm_update_account_use_case),
 ) -> JSONResponse:
     dto = ConfirmEmailChangeDTO(
         user_id=token.subject,
@@ -184,23 +211,23 @@ async def update_account_complete(
     try:
         account = await usecase.execute(dto=dto)
     except InvalidOrExpiredCode:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Incorrect code")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Incorrect code") from None
     except AccountForbidden:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account not found")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account not found") from None
 
     return JSONResponse(_to_schema(account).model_dump(mode="json"), status_code=status.HTTP_201_CREATED)
 
 
 @router.post("/refresh", response_model=LoginResultSchema)
 async def refresh(
-        _request: Request,
-        payload: RefreshSchema,
-        usecase: AbstractRefreshUseCase = Depends(refresh_use_case)
+    _request: Request,
+    payload: RefreshSchema,
+    usecase: AbstractRefreshUseCase = Depends(refresh_use_case),
 ) -> JSONResponse:
     try:
         refresh_token = await usecase.execute(refresh_token=payload.refresh_token)
     except InvalidRefreshToken:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token") from None
 
     token = LoginResultSchema(
         access_token=refresh_token.access_token,

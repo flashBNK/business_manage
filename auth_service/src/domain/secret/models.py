@@ -1,6 +1,7 @@
 import uuid
 from dataclasses import dataclass
 
+
 @dataclass(slots=True)
 class CreateSecretDTO:
     account_id: uuid.UUID

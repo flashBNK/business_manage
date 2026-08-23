@@ -1,10 +1,11 @@
-import uuid
 import datetime
-import jwt
+import uuid
 
+import jwt
 from domain.token.exceptions import InvalidToken, TokenExpired
-from domain.token.models import TokenDTO, MembershipAdmission
+from domain.token.models import MembershipAdmission, TokenDTO
 from domain.token.repository import AbstractTokenService
+
 
 class JVTTokenService(AbstractTokenService):
     def __init__(self, private_key: str, public_key: str, algorithm: str, access_lifetime: int):
@@ -17,9 +18,7 @@ class JVTTokenService(AbstractTokenService):
         now = datetime.datetime.now(datetime.UTC)
         claims = {
             "subject": str(payload.subject),
-            "memberships": [
-                {"company_id": str(m.company_id), "role": m.role} for m in payload.memberships
-            ],
+            "memberships": [{"company_id": str(m.company_id), "role": m.role} for m in payload.memberships],
             "iat": now,
             "exp": now + self._access_lifetime,
         }

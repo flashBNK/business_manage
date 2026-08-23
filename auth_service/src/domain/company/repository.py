@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from .exceptions import CompanyNotFound
 from domain.abstract import AbstractRepository
+
+from .exceptions import CompanyNotFound
 from .models import CompanyDTO, CreateCompanyDTO
 
 

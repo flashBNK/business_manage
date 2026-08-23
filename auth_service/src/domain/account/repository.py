@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from domain.account.exceptions import AccountNotFound
 from domain.abstract import AbstractRepository
+from domain.account.exceptions import AccountNotFound
+
 from .models import AccountDTO, CreateAccountDTO, UpdateAccountDTO
 
 

@@ -13,13 +13,14 @@ def setup_logging(debug: bool = False) -> None:
     if debug:
         processors = shared_processors + [structlog.dev.ConsoleRenderer()]
     else:
-        processors = shared_processors + [structlog.processors.dict_tracebacks, structlog.processors.JSONRenderer()]
+        processors = shared_processors + [
+            structlog.processors.dict_tracebacks,
+            structlog.processors.JSONRenderer(),
+        ]
 
     structlog.configure(
         processors=processors,
-        wrapper_class=structlog.make_filtering_bound_logger(
-            logging.DEBUG if debug else logging.INFO
-        ),
+        wrapper_class=structlog.make_filtering_bound_logger(logging.DEBUG if debug else logging.INFO),
         context_class=dict,
         logger_factory=structlog.PrintLoggerFactory(),
     )

@@ -1,13 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .account.account import PostgreSQLAccountRepository
+from .company.company import PostgreSQLCompanyRepository
 from .invite.invite import PostgreSQLInviteRepository
+from .member.member import PostgreSQLMemberRepository
 from .refresh_token.refresh_token import PostgreSQLRefreshTokenRepository
 from .secret.secret import PostgreSQLSecretRepository
-from .member.member import PostgreSQLMemberRepository
-from .company.company import PostgreSQLCompanyRepository
 from .user.user import PostgreSQLUserRepository
-
 
 
 class PostgreSQLUnitOfWork:

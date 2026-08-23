@@ -1,9 +1,8 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
-
 from infrastructure.databases.postgresql.models.user import UserStatus
+from pydantic import BaseModel, EmailStr
 
 
 class CheckAccountSchema(BaseModel):

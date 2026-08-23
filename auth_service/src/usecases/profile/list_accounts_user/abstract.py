@@ -6,5 +6,4 @@ from domain.account.models import AccountDTO
 
 class AbstractListAccountsUserUseCase(ABC):
     @abstractmethod
-    async def execute(self, user_id: uuid.UUID) -> tuple[list[AccountDTO], int]:
-        ...
+    async def execute(self, user_id: uuid.UUID) -> tuple[list[AccountDTO], int]: ...

@@ -1,11 +1,11 @@
-
 import uuid
 
 from domain.token.repository import AbstractTokenService
 from domain.user.models import UpdateUserDTO, UserDTO
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
-from .abstract import AbstractUpdateUserUseCase
 from logger import get_logger
+
+from .abstract import AbstractUpdateUserUseCase
 
 log = get_logger(__name__)
 

@@ -1,10 +1,9 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
 from api.v1.routers import router
 from container import Container
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from logger import get_logger, setup_logging
 from settings import settings
 

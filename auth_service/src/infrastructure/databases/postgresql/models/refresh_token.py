@@ -1,10 +1,11 @@
 import uuid
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
-from sqlalchemy import ForeignKey, String, DateTime
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..base import Base
+
 
 class RefreshToken(Base):
     __tablename__ = "refresh_token"

@@ -1,18 +1,15 @@
-import datetime
 import uuid
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from domain.member.models import MemberDTO, CreateMemberDTO
+from domain.member.models import CreateMemberDTO, MemberDTO
 from domain.member.repository import AbstractMemberRepository
 from infrastructure.databases.postgresql.models.members import Members as MemberModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class PostgreSQLMemberRepository(AbstractMemberRepository):
     def __init__(self, session: AsyncSession):
         self._session = session
-
 
     async def create(self, dto: CreateMemberDTO) -> MemberDTO:
         db_member = MemberModel(
@@ -27,7 +24,6 @@ class PostgreSQLMemberRepository(AbstractMemberRepository):
 
         return self._to_domain(db_member)
 
-
     async def get_by_user_id(self, user_id: uuid.UUID) -> list[MemberDTO] | None:
         stmt = select(MemberModel).where((MemberModel.user_id == user_id), MemberModel.is_active.is_(True))
         result = await self._session.execute(stmt)
@@ -38,14 +34,12 @@ class PostgreSQLMemberRepository(AbstractMemberRepository):
 
         return [self._to_domain(member) for member in members]
 
-
     async def get_by_invite_id(self, invite_id: uuid.UUID) -> MemberDTO | None:
         stmt = select(MemberModel).where((MemberModel.invite_id == invite_id), MemberModel.is_active.is_(True))
         result = await self._session.execute(stmt)
         member = result.scalar_one_or_none()
 
         return member
-
 
     async def activation_shift(self, member_id: uuid.UUID, flag: bool) -> MemberDTO | None:
         stmt = select(MemberModel).where(MemberModel.id == member_id)
@@ -63,8 +57,6 @@ class PostgreSQLMemberRepository(AbstractMemberRepository):
         await self._session.flush()
 
         return self._to_domain(member)
-
-
 
     async def delete(self, account_id: int) -> None:
         pass

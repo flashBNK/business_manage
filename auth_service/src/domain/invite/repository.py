@@ -2,8 +2,7 @@ import uuid
 from abc import ABC, abstractmethod
 
 from .exceptions import InviteNotFound
-from domain.abstract import AbstractRepository
-from .models import InviteDTO, CreateInviteDTO, UpdateInviteDTO
+from .models import InviteDTO, UpdateInviteDTO
 
 
 class AbstractInviteRepository(ABC):

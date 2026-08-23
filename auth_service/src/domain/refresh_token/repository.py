@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from .exceptions import InvalidRefreshToken
 from domain.abstract import AbstractRepository
-from .models import RefreshTokenDTO, CreateRefreshTokenDTO
+
+from .exceptions import InvalidRefreshToken
+from .models import CreateRefreshTokenDTO, RefreshTokenDTO
 
 
 class AbstractRefreshTokenRepository(AbstractRepository[RefreshTokenDTO, UUID, CreateRefreshTokenDTO], ABC):

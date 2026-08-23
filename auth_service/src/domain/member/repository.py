@@ -1,9 +1,10 @@
 import uuid
 from abc import ABC, abstractmethod
 
-from .exceptions import MembersNotFound
 from domain.abstract import AbstractRepository
-from .models import MemberDTO, CreateMemberDTO
+
+from .exceptions import MembersNotFound
+from .models import CreateMemberDTO, MemberDTO
 
 
 class AbstractMemberRepository(AbstractRepository[MemberDTO, int, CreateMemberDTO], ABC):
@@ -16,7 +17,7 @@ class AbstractMemberRepository(AbstractRepository[MemberDTO, int, CreateMemberDT
         raise MembersNotFound
 
     @abstractmethod
-    async def get_by_invite_id(self, invite_id: uuid.UUID) -> MemberDTO | None: \
+    async def get_by_invite_id(self, invite_id: uuid.UUID) -> MemberDTO | None:
         raise MembersNotFound
 
     # @abstractmethod

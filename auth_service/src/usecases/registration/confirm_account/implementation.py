@@ -1,16 +1,18 @@
 import datetime
 
-from domain.account.models import ConfirmAccountDTO, AccountDTO, CreateAccountDTO
+from domain.account.models import AccountDTO, ConfirmAccountDTO, CreateAccountDTO
 from domain.invite.exceptions import InvalidOrExpiredCode, TooManyAttempts
 from domain.invite.models import UpdateInviteDTO
 from infrastructure.databases.postgresql.models.invite import InviteStatus
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
-from .abstract import AbstractConfirmAccountUseCase
 from logger import get_logger
+
+from .abstract import AbstractConfirmAccountUseCase
 
 log = get_logger(__name__)
 
 MAX_ATTEMPTS = 5
+
 
 class PostgreSQLConfirmAccountUseCase(AbstractConfirmAccountUseCase):
     def __init__(self, uow: PostgreSQLUnitOfWork):
@@ -28,7 +30,11 @@ class PostgreSQLConfirmAccountUseCase(AbstractConfirmAccountUseCase):
             if invite.code != dto.code:
                 invite.attempts += 1
                 await uow.invite.update(invite_id=invite.id, dto=UpdateInviteDTO(attempts=invite.attempts))
-                log.warning("Неверный код подтверждения", email=dto.email, attempts=invite.attempts)
+                log.warning(
+                    "Неверный код подтверждения",
+                    email=dto.email,
+                    attempts=invite.attempts,
+                )
                 raise InvalidOrExpiredCode
 
             log.info("Проверка кода", code_invite=invite.code, new_code=dto.code)

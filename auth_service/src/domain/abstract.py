@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 TEntity = TypeVar("TEntity")
 TId = TypeVar("TId")
 TCreateDTO = TypeVar("TCreateDTO")
 TUpdateDTO = TypeVar("TUpdateDTO")
 
-class AbstractRepository(ABC, Generic[TEntity, TId, TCreateDTO]):
+
+class AbstractRepository[TEntity, TId, TCreateDTO](ABC):
     @abstractmethod
     async def get(self, entity_id: TId) -> TEntity | None:
         raise NotImplementedError

@@ -2,13 +2,13 @@ import uuid
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, ConfigDict, Field
-
 from domain.token.models import MembershipAdmission
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class CreateAccountSchema(BaseModel):
     email: EmailStr
+
 
 class AccountSchema(BaseModel):
     id: UUID
@@ -16,15 +16,19 @@ class AccountSchema(BaseModel):
     is_verified: bool
     verified_at: datetime
 
+
 class ListAccountsSchema(BaseModel):
     total: int
     accounts: list[AccountSchema]
 
+
 class RequestEmailChangeSchema(BaseModel):
     new_email: EmailStr
 
+
 class ConfirmSchema(BaseModel):
     invite_code: str
+
 
 class ConfirmAccountSchema(BaseModel):
     email: EmailStr

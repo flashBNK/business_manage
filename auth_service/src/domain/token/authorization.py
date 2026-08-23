@@ -1,6 +1,6 @@
 import uuid
 
-from domain.token.models import TokenDTO, MembershipAdmission
+from domain.token.models import MembershipAdmission, TokenDTO
 from infrastructure.databases.postgresql.models.members import MemberRoles
 
 ROLE_RANK: dict[MemberRoles, int] = {
@@ -10,7 +10,10 @@ ROLE_RANK: dict[MemberRoles, int] = {
 
 
 def get_membership(token: TokenDTO, company_id: uuid.UUID) -> MembershipAdmission:
-    return next((membership for membership in token.memberships if membership.company_id == company_id), None)
+    return next(
+        (membership for membership in token.memberships if membership.company_id == company_id),
+        None,
+    )
 
 
 def has_role_at_least(token: TokenDTO, company_id: uuid.UUID, min_role: MemberRoles) -> bool:

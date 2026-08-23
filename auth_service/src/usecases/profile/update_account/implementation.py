@@ -2,12 +2,13 @@ import datetime
 import secrets
 import uuid
 
-from domain.account.exceptions import AccountForbidden, EmailIsUsed, AccountNotFound
+from domain.account.exceptions import AccountForbidden, AccountNotFound, EmailIsUsed
 from domain.account.models import RequestEmailChangeDTO
 from domain.invite.models import CreateInviteDTO
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
-from .abstract import AbstractUpdateAccountUseCase
 from logger import get_logger
+
+from .abstract import AbstractUpdateAccountUseCase
 
 log = get_logger(__name__)
 

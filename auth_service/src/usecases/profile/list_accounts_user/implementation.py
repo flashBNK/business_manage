@@ -3,8 +3,9 @@ import uuid
 from domain.account.models import AccountDTO
 from domain.token.repository import AbstractTokenService
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
-from .abstract import AbstractListAccountsUserUseCase
 from logger import get_logger
+
+from .abstract import AbstractListAccountsUserUseCase
 
 log = get_logger(__name__)
 

@@ -1,11 +1,10 @@
-from typing import AsyncIterator
-
-from dependency_injector.wiring import Provide, inject
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from collections.abc import AsyncIterator
 
 from container import Container
+from dependency_injector.wiring import Provide, inject
+from fastapi import Depends
 from infrastructure.databases.postgresql.session_manager import DatabaseSessionManager
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @inject

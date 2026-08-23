@@ -1,13 +1,18 @@
 import datetime
 import secrets
 
-from domain.invite.models import CreateInviteDTO
-from domain.member.models import CreateMemberDTO, CreateEmployeeResultDTO, CreateEmployeeDTO
 from domain.account.exceptions import EmailIsUsed
+from domain.invite.models import CreateInviteDTO
+from domain.member.models import (
+    CreateEmployeeDTO,
+    CreateEmployeeResultDTO,
+    CreateMemberDTO,
+)
 from domain.user.models import CreateUserDTO
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
-from .abstract import AbstractCreateEmployeeUseCase
 from logger import get_logger
+
+from .abstract import AbstractCreateEmployeeUseCase
 
 log = get_logger(__name__)
 
@@ -35,7 +40,7 @@ class PostgreSQLCreateEmployeeUseCase(AbstractCreateEmployeeUseCase):
                 user_id=user.id,
                 company_id=dto.company_id,
                 role=dto.role,
-                invite_id=invite.id
+                invite_id=invite.id,
             )
             member = await uow.member.create(member)
 

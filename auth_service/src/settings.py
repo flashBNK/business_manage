@@ -54,9 +54,7 @@ class _DatabaseSettings(BaseSettings):
 
     def get_database_url(self) -> str:
         return (
-            f"postgresql+asyncpg://{self.user}:"
-            f"{self.password.get_secret_value()}"
-            f"@{self.host}:{self.port}/{self.name}"
+            f"postgresql+asyncpg://{self.user}:{self.password.get_secret_value()}@{self.host}:{self.port}/{self.name}"
         )
 
 

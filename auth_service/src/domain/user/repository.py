@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-
 from domain.abstract import AbstractRepository
+
 from .exceptions import UserNotFound
-from .models import UserDTO, CreateUserDTO, UpdateUserDTO
+from .models import CreateUserDTO, UpdateUserDTO, UserDTO
 
 
 class AbstractUserRepository(AbstractRepository[UserDTO, UUID, CreateUserDTO], ABC):

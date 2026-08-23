@@ -1,19 +1,17 @@
-import uuid
 import datetime
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+import uuid
 
 from domain.invite.exceptions import InviteNotFound
-from domain.invite.models import InviteDTO, CreateInviteDTO, UpdateInviteDTO
+from domain.invite.models import CreateInviteDTO, InviteDTO, UpdateInviteDTO
 from domain.invite.repository import AbstractInviteRepository
 from infrastructure.databases.postgresql.models.invite import Invite as InviteModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class PostgreSQLInviteRepository(AbstractInviteRepository):
     def __init__(self, session: AsyncSession):
         self._session = session
-
 
     async def create(self, dto: CreateInviteDTO) -> InviteDTO:
         stmt = select(InviteModel).where(InviteModel.email == dto.email)
@@ -32,15 +30,13 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
             account_id=dto.account_id,
         )
 
-
         self._session.add(db_invite)
         await self._session.flush()
 
         return self._to_domain(db_invite)
 
-
     async def get_by_email(self, email: str) -> InviteDTO | None:
-        query = select(InviteModel).where((InviteModel.email == email))
+        query = select(InviteModel).where(InviteModel.email == email)
         result = await self._session.execute(query)
         invite = result.scalar_one_or_none()
 
@@ -48,7 +44,6 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
             return None
 
         return self._to_domain(invite)
-
 
     async def update(self, invite_id: uuid.UUID, dto: UpdateInviteDTO) -> InviteDTO:
         stmt = select(InviteModel).where(InviteModel.id == invite_id)
@@ -68,7 +63,6 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
 
         return self._to_domain(invite)
 
-
     async def delete(self, invite_id: uuid.UUID) -> None:
         stmt = select(InviteModel).where(InviteModel.id == invite_id)
         result = await self._session.execute(stmt)
@@ -80,7 +74,6 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
         await self._session.delete(invite)
         await self._session.flush()
 
-
     async def get_by_code(self, code: str) -> InviteDTO | None:
         stmt = select(InviteModel).where(InviteModel.code == code)
         result = await self._session.execute(stmt)
@@ -88,21 +81,18 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
 
         return self._to_domain(invite)
 
-
     async def get_by_account_id(self, account_id: uuid.UUID) -> InviteDTO | None:
         stmt = select(InviteModel).where(InviteModel.account_id == account_id)
         result = await self._session.execute(stmt)
         invite = result.scalar_one_or_none()
 
         if not invite:
-            raise None
+            return None
 
         return self._to_domain(invite)
 
-
     async def get(self, invite_id: uuid.UUID) -> InviteDTO:
         pass
-
 
     @staticmethod
     def _to_domain(invite: InviteModel) -> InviteDTO:

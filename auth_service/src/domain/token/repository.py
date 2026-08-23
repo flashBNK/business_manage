@@ -9,7 +9,6 @@ class AbstractTokenService(ABC):
     def create_access_token(self, payload: TokenDTO) -> str:
         raise InvalidToken
 
-
     @abstractmethod
     def decode_access_token(self, token: str) -> TokenDTO:
         raise InvalidToken

@@ -30,6 +30,7 @@ class CreateEmployeeDTO:
     company_id: uuid.UUID
     role: MemberRoles = MemberRoles.MEMBER
 
+
 @dataclass(slots=True)
 class CreateEmployeeResultDTO:
     user_id: uuid.UUID

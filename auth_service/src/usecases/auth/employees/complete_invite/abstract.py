@@ -6,5 +6,4 @@ from domain.token.models import LoginResultDTO
 
 class AbstractCompleteEmployeeInviteUseCase(ABC):
     @abstractmethod
-    async def execute(self, dto: CompleteEmployeeInviteDTO) -> LoginResultDTO:
-        ...
+    async def execute(self, dto: CompleteEmployeeInviteDTO) -> LoginResultDTO: ...

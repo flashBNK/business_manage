@@ -1,5 +1,6 @@
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
 from infrastructure.security.hash_token import hash_token
+
 from .abstract import AbstractLogoutUseCase
 
 

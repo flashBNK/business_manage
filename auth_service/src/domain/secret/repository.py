@@ -2,9 +2,10 @@ import uuid
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from domain.secret.exceptions import SecretNotFound
 from domain.abstract import AbstractRepository
-from .models import SecretDTO, CreateSecretDTO
+from domain.secret.exceptions import SecretNotFound
+
+from .models import CreateSecretDTO, SecretDTO
 
 
 class AbstractSecretRepository(AbstractRepository[SecretDTO, UUID, CreateSecretDTO], ABC):

@@ -1,7 +1,8 @@
 import uuid
-from pydantic import BaseModel, EmailStr
 
 from infrastructure.databases.postgresql.models.members import MemberRoles
+from pydantic import BaseModel, EmailStr
+
 
 class CreateEmployeeSchema(BaseModel):
     email: EmailStr
@@ -13,7 +14,6 @@ class CreateEmployeeSchema(BaseModel):
 class CreateEmployeeResultSchema(BaseModel):
     user_id: uuid.UUID
     member_id: uuid.UUID
-
 
 
 class CompleteEmployeeInviteSchema(BaseModel):

@@ -15,10 +15,12 @@ class AccountDTO:
 class CreateAccountDTO:
     email: str
 
+
 @dataclass(slots=True)
 class ConfirmAccountDTO:
     email: str
     code: str
+
 
 @dataclass(slots=True)
 class CompleteSignUpDTO:
@@ -28,16 +30,19 @@ class CompleteSignUpDTO:
     last_name: str
     company_name: str
 
+
 @dataclass(slots=True)
 class RequestEmailChangeDTO:
     user_id: uuid.UUID
     new_email: str
+
 
 @dataclass(slots=True)
 class ConfirmEmailChangeDTO:
     user_id: uuid.UUID
     account_id: uuid.UUID
     invite_code: str
+
 
 @dataclass(slots=True)
 class UpdateAccountDTO:

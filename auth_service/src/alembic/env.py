@@ -2,14 +2,13 @@ import sys
 from logging.config import fileConfig
 from pathlib import Path
 
-from sqlalchemy import engine_from_config, pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from infrastructure.databases.postgresql.base import Base
-from infrastructure.databases.postgresql.models import *  # noqa: F401,F403 — регистрирует модели в Base.metadata
+from infrastructure.databases.postgresql.models import *  # noqa: F403
 from settings import settings
 
 config = context.config

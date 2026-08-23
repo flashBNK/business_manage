@@ -1,13 +1,13 @@
-import secrets
 import datetime
+import secrets
 
-from domain.account.models import CreateAccountDTO, AccountDTO
-
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
-from .abstract import AbstractCheckAccountUseCase
 from domain.account.exceptions import EmailIsUsed
+from domain.account.models import CreateAccountDTO
 from domain.invite.models import CreateInviteDTO
+from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
 from logger import get_logger
+
+from .abstract import AbstractCheckAccountUseCase
 
 log = get_logger(__name__)
 
@@ -33,4 +33,3 @@ class PostgreSQLCheckAccountUseCase(AbstractCheckAccountUseCase):
             await uow.invite.create(dto=dto_invite)
 
             log.info("Код подтверждения сгенерирован", email=dto.email, code=code)
-

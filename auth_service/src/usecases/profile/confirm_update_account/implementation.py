@@ -1,13 +1,16 @@
 import datetime
+
 from domain.account.exceptions import AccountForbidden
-from domain.account.models import AccountDTO, UpdateAccountDTO, ConfirmEmailChangeDTO
+from domain.account.models import AccountDTO, ConfirmEmailChangeDTO, UpdateAccountDTO
 from domain.invite.exceptions import InvalidOrExpiredCode
 from infrastructure.databases.postgresql.models.invite import InviteStatus
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
-from .abstract import AbstractConfirmUpdateAccountUseCase
 from logger import get_logger
 
+from .abstract import AbstractConfirmUpdateAccountUseCase
+
 log = get_logger(__name__)
+
 
 class PostgreSQLConfirmUpdateAccountUseCase(AbstractConfirmUpdateAccountUseCase):
     def __init__(self, uow: PostgreSQLUnitOfWork):
