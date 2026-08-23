@@ -1,7 +1,10 @@
+import uuid
+
 from domain.account.exceptions import AccountAlreadyRegistered, EmailNotFound
 from domain.account.models import CompleteSignUpDTO
 from domain.company.models import CreateCompanyDTO
 from domain.member.models import CreateMemberDTO
+from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
 from domain.refresh_token.issue_tokens import issue_token_pair
 from domain.secret.models import CreateSecretDTO
 from domain.token.models import LoginResultDTO, MembershipAdmission, TokenDTO
@@ -22,6 +25,7 @@ class PostgreSQLCompleteSignUpUseCase(AbstractCompleteSignUpUseCase):
         self._token_service = token_service
 
     async def execute(self, dto: CompleteSignUpDTO) -> LoginResultDTO:
+        correlation_id = uuid.uuid4()
         company = None
         member = None
 
@@ -43,11 +47,41 @@ class PostgreSQLCompleteSignUpUseCase(AbstractCompleteSignUpUseCase):
                         CreateMemberDTO(
                             user_id=user.id,
                             company_id=company.id,
-                            role=MemberRoles.ADMIN,
+                            role=MemberRoles.OWNER,
+                            is_active=True,
                         )
                     )
 
             if company:
+                await uow.outbox_event.create(
+                    CreateOutboxEventDTO(
+                        event_type=OutboxEventType.COMPANY_CREATED,
+                        aggregate_id=company.id,
+                        correlation_id=correlation_id,
+                        payload={
+                            "company_id": str(company.id),
+                            "name": company.name,
+                        },
+                    )
+                )
+
+                await uow.outbox_event.create(
+                    CreateOutboxEventDTO(
+                        event_type=OutboxEventType.EMPLOYEE_CREATED,
+                        aggregate_id=user.id,
+                        correlation_id=correlation_id,
+                        payload={
+                            "user_id": str(user.id),
+                            "company_id": str(member.company_id),
+                            "first_name": dto.first_name,
+                            "last_name": dto.last_name,
+                            "email": dto.email,
+                            "role": member.role.value,
+                            "is_active": member.is_active,
+                        },
+                    )
+                )
+
                 log.info(
                     "Компания и администратор созданы",
                     company_id=str(company.id),

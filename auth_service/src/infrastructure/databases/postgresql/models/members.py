@@ -11,6 +11,7 @@ from ..base import Base
 class MemberRoles(enum.StrEnum):
     ADMIN = "admin"
     MEMBER = "member"
+    OWNER = "owner"
 
 
 class Members(Base):

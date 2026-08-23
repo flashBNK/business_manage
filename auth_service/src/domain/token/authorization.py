@@ -6,6 +6,7 @@ from infrastructure.databases.postgresql.models.members import MemberRoles
 ROLE_RANK: dict[MemberRoles, int] = {
     MemberRoles.MEMBER: 0,
     MemberRoles.ADMIN: 1,
+    MemberRoles.OWNER: 2,
 }
 
 

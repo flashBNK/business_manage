@@ -23,7 +23,7 @@ class PostgreSQLUpdateAccountUseCase(AbstractUpdateAccountUseCase):
             if not current_account:
                 raise AccountNotFound
 
-            accounts, total = await uow.account.list_by_user_id(user_id=dto.user_id)
+            accounts, _ = await uow.account.list_by_user_id(user_id=dto.user_id)
             if account_id not in [account.id for account in accounts]:
                 raise AccountForbidden
             if await uow.account.get_by_email(dto.new_email):

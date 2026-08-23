@@ -31,6 +31,7 @@ class CreateInviteDTO:
 class UpdateInviteDTO:
     attempts: int | None = None
     status: InviteStatus | None = None
+    accepted_at: datetime | None = None
 
 
 @dataclass(slots=True)

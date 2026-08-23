@@ -20,6 +20,7 @@ class CreateMemberDTO:
     company_id: uuid.UUID
     role: MemberRoles
     invite_id: uuid.UUID | None = None
+    is_active: bool | None = None
 
 
 @dataclass(slots=True)

@@ -1,8 +1,10 @@
 import datetime
+import uuid
 
 from domain.account.models import CreateAccountDTO
 from domain.invite.exceptions import InvalidOrExpiredCode, InviteAlreadyUsed
 from domain.invite.models import CompleteEmployeeInviteDTO, UpdateInviteDTO
+from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
 from domain.refresh_token.issue_tokens import issue_token_pair
 from domain.secret.models import CreateSecretDTO
 from domain.token.models import LoginResultDTO, MembershipAdmission, TokenDTO
@@ -22,6 +24,8 @@ class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseC
         self._token_service = token_service
 
     async def execute(self, dto: CompleteEmployeeInviteDTO) -> LoginResultDTO:
+        correlation_id = uuid.uuid4()
+
         async with self._uow as uow:
             invite = await uow.invite.get_by_code(code=dto.invite_token)
             if not invite or invite.expires_at < datetime.datetime.now(datetime.UTC):
@@ -39,6 +43,21 @@ class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseC
             member = await uow.member.activation_shift(member_id=member.id, flag=True)
 
             invite = await uow.invite.update(invite_id=invite.id, dto=UpdateInviteDTO(status=InviteStatus.ACCEPTED))
+
+            await uow.outbox_event.create(
+                CreateOutboxEventDTO(
+                    event_type=OutboxEventType.EMPLOYEE_REGISTERED,
+                    aggregate_id=invite.user_id,
+                    correlation_id=correlation_id,
+                    payload={
+                        "user_id": str(invite.user_id),
+                        "company_id": str(member.company_id),
+                        "email": invite.email,
+                        "role": member.role.value,
+                        "is_active": member.is_active,
+                    },
+                )
+            )
 
             log.info(
                 "Регистрация сотрудника завершена",

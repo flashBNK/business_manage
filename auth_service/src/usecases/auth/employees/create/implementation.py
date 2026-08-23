@@ -1,5 +1,6 @@
 import datetime
 import secrets
+import uuid
 
 from domain.account.exceptions import EmailIsUsed
 from domain.invite.models import CreateInviteDTO
@@ -8,6 +9,7 @@ from domain.member.models import (
     CreateEmployeeResultDTO,
     CreateMemberDTO,
 )
+from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
 from domain.user.models import CreateUserDTO
 from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
 from logger import get_logger
@@ -22,6 +24,8 @@ class PostgreSQLCreateEmployeeUseCase(AbstractCreateEmployeeUseCase):
         self._uow = uow
 
     async def execute(self, dto: CreateEmployeeDTO) -> CreateEmployeeResultDTO:
+        correlation_id = uuid.uuid4()
+
         async with self._uow as uow:
             account = await uow.account.get_by_email(dto.email)
             if account:
@@ -41,8 +45,26 @@ class PostgreSQLCreateEmployeeUseCase(AbstractCreateEmployeeUseCase):
                 company_id=dto.company_id,
                 role=dto.role,
                 invite_id=invite.id,
+                is_active=False,
             )
             member = await uow.member.create(member)
+
+            await uow.outbox_event.create(
+                CreateOutboxEventDTO(
+                    event_type=OutboxEventType.EMPLOYEE_CREATED,
+                    aggregate_id=user.id,
+                    correlation_id=correlation_id,
+                    payload={
+                        "user_id": str(user.id),
+                        "company_id": str(member.company_id),
+                        "first_name": dto.first_name,
+                        "last_name": dto.last_name,
+                        "email": dto.email,
+                        "role": member.role.value,
+                        "is_active": member.is_active,
+                    },
+                )
+            )
 
             log.info(
                 "Ссылка приглашение создана",

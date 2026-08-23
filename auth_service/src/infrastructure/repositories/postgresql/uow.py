@@ -4,6 +4,7 @@ from .account.account import PostgreSQLAccountRepository
 from .company.company import PostgreSQLCompanyRepository
 from .invite.invite import PostgreSQLInviteRepository
 from .member.member import PostgreSQLMemberRepository
+from .outbox_event.outbox_event import PostgreSQLOutboxEventRepository
 from .refresh_token.refresh_token import PostgreSQLRefreshTokenRepository
 from .secret.secret import PostgreSQLSecretRepository
 from .user.user import PostgreSQLUserRepository
@@ -20,6 +21,7 @@ class PostgreSQLUnitOfWork:
         self.company: PostgreSQLCompanyRepository | None = None
         self.user: PostgreSQLUserRepository | None = None
         self.refresh_token: PostgreSQLRefreshTokenRepository | None = None
+        self.outbox_event: PostgreSQLOutboxEventRepository | None = None
 
     async def __aenter__(self):
         self.account = PostgreSQLAccountRepository(self._session)
@@ -29,6 +31,7 @@ class PostgreSQLUnitOfWork:
         self.company = PostgreSQLCompanyRepository(self._session)
         self.user = PostgreSQLUserRepository(self._session)
         self.refresh_token = PostgreSQLRefreshTokenRepository(self._session)
+        self.outbox_event = PostgreSQLOutboxEventRepository(self._session)
         return self
 
     async def __aexit__(self, exc_type: Exception | None, exc_val, traceback):
@@ -44,6 +47,7 @@ class PostgreSQLUnitOfWork:
         self.company = None
         self.user = None
         self.refresh_token = None
+        self.outbox_event = None
 
     async def commit(self):
         await self._session.commit()
