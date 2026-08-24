@@ -77,6 +77,16 @@ class _JWTSettings(BaseSettings):
         return self.public_key_path.read_text()
 
 
+class _KafkaSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=BASE_DIR.parent / "config" / ".env",
+        env_prefix="KAFKA_",
+        extra="ignore"
+    )
+
+    bootstrap_servers: str = "localhost:9092"
+
+
 class _Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=BASE_DIR.parent / "config" / ".env",
@@ -85,6 +95,7 @@ class _Settings(BaseSettings):
     app: _AppSettings
     database: _DatabaseSettings
     jwt: _JWTSettings
+    kafka: _KafkaSettings
 
     @classmethod
     def load(cls) -> "_Settings":
@@ -100,6 +111,7 @@ class _Settings(BaseSettings):
             app=_AppSettings(**data.get("app", {})),
             database=_DatabaseSettings(),
             jwt=_JWTSettings(),
+            kafka=_KafkaSettings(),
         )
 
 

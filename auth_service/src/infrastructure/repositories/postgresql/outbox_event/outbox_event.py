@@ -1,10 +1,14 @@
 import uuid
 
+from datetime import datetime, UTC
+from uuid import UUID
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from domain.outbox_event.dedup_key import compute_dedup_key
 from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventDTO, OutboxEventType
 from domain.outbox_event.repository import AbstractOutboxEventRepository
 from infrastructure.databases.postgresql.models.outbox_event import OutboxEvent as OutboxEventModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
 SERVICE_NAME = "auth_service"
 
@@ -31,6 +35,31 @@ class PostgreSQLOutboxEventRepository(AbstractOutboxEventRepository):
         await self._session.flush()
 
         return self._to_domain(db_outbox_event)
+
+
+    async def get_unpublished(self, limit: int = 100) -> list[OutboxEventDTO]:
+        stmt = (
+            select(OutboxEventModel)
+            .where(OutboxEventModel.published_at.is_(None))
+            .order_by(OutboxEventModel.occurred_at)
+            .limit(limit)
+            .with_for_update(skip_locked=True) # если одна сотня уже в процессе выставления, то повторный вызов функции в другом потоке возьмёт следующую сотню
+        )
+        result = await self._session.execute(stmt)
+        events = result.scalars().all()
+
+        return [self._to_domain(event) for event in events]
+
+
+    async def mark_published(self, event_id: UUID) -> None:
+        stmt = (
+            update(OutboxEventModel)
+            .where(OutboxEventModel.event_id == event_id)
+            .values(published_at=datetime.now(UTC))
+        )
+
+        await self._session.execute(stmt)
+
 
     async def delete(self, outbox_event_id: int) -> None:
         pass
