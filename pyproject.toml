@@ -22,7 +22,8 @@ dependencies = [
     "email-validator (>=2.3.0,<3.0.0)",
     "pyjwt[crypto] (>=2.13.0,<3.0.0)",
     "passlib (>=1.7.4,<2.0.0)",
-    "argon2-cffi (>=25.1.0,<26.0.0)"
+    "argon2-cffi (>=25.1.0,<26.0.0)",
+    "sqlalchemy-utils (>=0.42.1,<0.43.0)"
 ]
 
 [tool.poetry]

@@ -2,3 +2,4 @@
 .idea
 .env.auth
 auth_service/config/keys/
+org_service/config/keys/

@@ -4,6 +4,7 @@ networks:
 
 volumes:
   auth_postgres_data:
+  org_postgres_data:
   kafka-data:
 
 services:
@@ -46,6 +47,51 @@ services:
       - "${AUTH_SERVICE_PORT}:8000"
     depends_on:
       auth_postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - microservices
+
+  org_postgres:
+    image: postgres:17-alpine
+    container_name: org_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${ORG_DB_USER}
+      POSTGRES_PASSWORD: ${ORG_DB_PASSWORD}
+      POSTGRES_DB: ${ORG_DB_NAME}
+    volumes:
+      - org_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${ORG_DB_PORT}:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${ORG_DB_USER} -d ${ORG_DB_NAME}" ]
+      interval: 5s
+      retries: 5
+    networks:
+      - microservices
+
+  org_service:
+    build:
+      context: .
+      dockerfile: org_service/Dockerfile
+    container_name: org_service
+    restart: unless-stopped
+    volumes:
+      - ./org_service:/app/org_service
+    environment:
+      APP_SECRET_KEY: ${ORG_APP_SECRET_KEY}
+      DB_USER: ${ORG_DB_USER}
+      DB_PASSWORD: ${ORG_DB_PASSWORD}
+      DB_HOST: ${ORG_DB_HOST}
+      DB_PORT: "5432"
+      DB_NAME: ${ORG_DB_NAME}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    ports:
+      - "${ORG_SERVICE_PORT}:8000"
+    depends_on:
+      org_postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy

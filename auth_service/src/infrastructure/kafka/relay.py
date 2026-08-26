@@ -20,7 +20,6 @@ async def run_outbox_relay(producer: KafkaEventProducer, session_manager: Databa
     while True:
         await asyncio.sleep(1)
         try:
-
             async with session_manager.session() as session:
                 repo = PostgreSQLOutboxEventRepository(session)
                 events = await repo.get_unpublished(limit=100)
@@ -35,7 +34,7 @@ async def run_outbox_relay(producer: KafkaEventProducer, session_manager: Databa
                         await producer.publish(
                             topic=topic,
                             key=str(event.aggregate_id),
-                            value=event.payload,
+                            event=event,
                         )
                     except Exception:
                         log.exception("Не удалось опубликовать событие", event_id=str(event.event_id))

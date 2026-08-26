@@ -15,6 +15,7 @@ from domain.account.models import (
     CreateAccountDTO,
     RequestEmailChangeDTO,
 )
+from domain.company.exceptions import CompanyNameIsUsed
 from domain.invite.exceptions import InvalidOrExpiredCode, TooManyAttempts
 from domain.refresh_token.exceptions import InvalidRefreshToken
 from domain.secret.exceptions import SecretNotFound, WrongSecretPassword
@@ -98,7 +99,7 @@ async def confirm_account(
     return JSONResponse(_to_schema(account).model_dump(mode="json"), status_code=status.HTTP_201_CREATED)
 
 
-@router.post("/login", response_model=LoginSchema)
+@router.post("/login", response_model=LoginResultSchema)
 async def login(
     _request: Request,
     payload: LoginSchema,
@@ -111,10 +112,8 @@ async def login(
 
     try:
         token = await usecase.execute(dto)
-    except (WrongSecretPassword, EmailNotFound):
+    except (WrongSecretPassword, EmailNotFound, SecretNotFound):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password") from None
-    except SecretNotFound as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
 
     content = LoginResultSchema(access_token=token.access_token, refresh_token=token.refresh_token)
 
@@ -139,7 +138,7 @@ async def complete_sign_up(
         result = await usecase.execute(dto)
     except EmailNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
-    except AccountAlreadyRegistered as exc:
+    except (AccountAlreadyRegistered, CompanyNameIsUsed) as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
 
     token = LoginResultSchema(access_token=result.access_token, refresh_token=result.refresh_token)

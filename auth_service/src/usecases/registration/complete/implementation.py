@@ -2,6 +2,7 @@ import uuid
 
 from domain.account.exceptions import AccountAlreadyRegistered, EmailNotFound
 from domain.account.models import CompleteSignUpDTO
+from domain.company.exceptions import CompanyNameIsUsed
 from domain.company.models import CreateCompanyDTO
 from domain.member.models import CreateMemberDTO
 from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
@@ -51,6 +52,8 @@ class PostgreSQLCompleteSignUpUseCase(AbstractCompleteSignUpUseCase):
                             is_active=True,
                         )
                     )
+                else:
+                    raise CompanyNameIsUsed
 
             if company:
                 await uow.outbox_event.create(

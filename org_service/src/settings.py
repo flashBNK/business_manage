@@ -14,7 +14,7 @@ class _AppSettings(BaseSettings):
         extra="ignore",
     )
 
-    name: str = "auth_service"
+    name: str = "org_service"
     host: str = "0.0.0.0"
     port: int = 8000
     debug: bool = True
@@ -50,7 +50,7 @@ class _DatabaseSettings(BaseSettings):
     password: SecretStr
     host: str = "localhost"
     port: int = 5432
-    name: str = "auth_db"
+    name: str = "org_db"
 
     def get_database_url(self) -> str:
         return (
@@ -65,13 +65,9 @@ class _JWTSettings(BaseSettings):
         extra="ignore",
     )
 
-    private_key_path: Path = BASE_DIR.parent / "config" / "keys" / "jwt-private.pem"
     public_key_path: Path = BASE_DIR.parent / "config" / "keys" / "jwt-public.pem"
     algorithm: str = "RS256"
     access_lifetime: int = 15
-
-    def get_private_key(self) -> str:
-        return self.private_key_path.read_text()
 
     def get_public_key(self) -> str:
         return self.public_key_path.read_text()
