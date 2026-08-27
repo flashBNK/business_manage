@@ -37,7 +37,14 @@ class PostgreSQLUserRepository(AbstractUserRepository):
         return self._to_domain(user)
 
     async def get(self, user_id: uuid.UUID) -> UserDTO:
-        pass
+        stmt = select(UserModel).where(UserModel.id == user_id)
+        result = await self._session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise UserNotFound
+
+        return self._to_domain(user)
 
     async def delete(self, user_id: uuid.UUID) -> None:
         pass

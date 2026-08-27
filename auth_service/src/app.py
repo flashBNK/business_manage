@@ -6,8 +6,7 @@ from api.v1.routers import router
 from container import Container
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from infrastructure.kafka.relay import run_outbox_relay
+from infrastructure.kafka.producer_loop import run_outbox_relay
 from logger import get_logger, setup_logging
 from settings import settings
 

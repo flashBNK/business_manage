@@ -49,6 +49,8 @@ class PostgreSQLCreateEmployeeUseCase(AbstractCreateEmployeeUseCase):
             )
             member = await uow.member.create(member)
 
+            log.info("IS_ACTIVE", is_active=member.is_active)
+
             await uow.outbox_event.create(
                 CreateOutboxEventDTO(
                     event_type=OutboxEventType.EMPLOYEE_CREATED,

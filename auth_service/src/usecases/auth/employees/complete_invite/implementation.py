@@ -4,6 +4,7 @@ import uuid
 from domain.account.models import CreateAccountDTO
 from domain.invite.exceptions import InvalidOrExpiredCode, InviteAlreadyUsed
 from domain.invite.models import CompleteEmployeeInviteDTO, UpdateInviteDTO
+from domain.member.exceptions import MemberAlreadyActivated
 from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
 from domain.refresh_token.issue_tokens import issue_token_pair
 from domain.secret.models import CreateSecretDTO
@@ -40,9 +41,12 @@ class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseC
             )
 
             member = await uow.member.get_by_invite_id(invite_id=invite.id)
+            if not member:
+                raise MemberAlreadyActivated
             member = await uow.member.activation_shift(member_id=member.id, flag=True)
 
             invite = await uow.invite.update(invite_id=invite.id, dto=UpdateInviteDTO(status=InviteStatus.ACCEPTED))
+            user = await uow.user.get(user_id=invite.user_id)
 
             await uow.outbox_event.create(
                 CreateOutboxEventDTO(
@@ -52,6 +56,8 @@ class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseC
                     payload={
                         "user_id": str(invite.user_id),
                         "company_id": str(member.company_id),
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
                         "email": invite.email,
                         "role": member.role.value,
                         "is_active": member.is_active,

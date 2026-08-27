@@ -17,6 +17,7 @@ class PostgreSQLMemberRepository(AbstractMemberRepository):
             company_id=dto.company_id,
             invite_id=dto.invite_id,
             role=dto.role,
+            is_active=dto.is_active if dto.is_active else False,
         )
 
         self._session.add(db_member)
@@ -35,7 +36,7 @@ class PostgreSQLMemberRepository(AbstractMemberRepository):
         return [self._to_domain(member) for member in members]
 
     async def get_by_invite_id(self, invite_id: uuid.UUID) -> MemberDTO | None:
-        stmt = select(MemberModel).where((MemberModel.invite_id == invite_id), MemberModel.is_active.is_(True))
+        stmt = select(MemberModel).where((MemberModel.invite_id == invite_id), MemberModel.is_active.is_(False))
         result = await self._session.execute(stmt)
         member = result.scalar_one_or_none()
 

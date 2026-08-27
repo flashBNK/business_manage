@@ -67,7 +67,6 @@ class _JWTSettings(BaseSettings):
 
     public_key_path: Path = BASE_DIR.parent / "config" / "keys" / "jwt-public.pem"
     algorithm: str = "RS256"
-    access_lifetime: int = 15
 
     def get_public_key(self) -> str:
         return self.public_key_path.read_text()

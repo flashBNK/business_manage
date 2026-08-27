@@ -3,6 +3,7 @@ import uuid
 from domain.account.exceptions import EmailIsUsed
 from domain.invite.exceptions import InvalidOrExpiredCode, InviteAlreadyUsed
 from domain.invite.models import CompleteEmployeeInviteDTO
+from domain.member.exceptions import MemberAlreadyActivated
 from domain.member.models import CreateEmployeeDTO
 from domain.token.models import TokenDTO
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -66,7 +67,7 @@ async def invite_complete(
         result = await usecase.execute(dto)
     except InvalidOrExpiredCode as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from None
-    except InviteAlreadyUsed as exc:
+    except (InviteAlreadyUsed, MemberAlreadyActivated) as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
 
     result_schema = LoginResultSchema(access_token=result.access_token, refresh_token=result.refresh_token)
