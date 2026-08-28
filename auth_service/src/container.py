@@ -2,13 +2,13 @@ from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Factory, Singleton
 from infrastructure.databases.postgresql.session_manager import DatabaseSessionManager
 from infrastructure.kafka.producer import KafkaEventProducer
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from infrastructure.security.jwt_service import JVTTokenService
 from settings import settings
 
 
 class Container(DeclarativeContainer):
-    uow_factory = Factory(PostgreSQLUnitOfWork)
+    uow_factory = Factory(PostgreSQLAuthUnitOfWork)
 
     session_manager = Singleton(DatabaseSessionManager)
 

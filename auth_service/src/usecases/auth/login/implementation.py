@@ -2,7 +2,7 @@ from domain.account.exceptions import EmailNotFound
 from domain.refresh_token.issue_tokens import issue_token_pair
 from domain.token.models import LoginDTO, LoginResultDTO, MembershipAdmission, TokenDTO
 from domain.token.repository import AbstractTokenService
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from logger import get_logger
 
 from .abstract import AbstractLoginUseCase
@@ -11,7 +11,7 @@ log = get_logger(__name__)
 
 
 class PostgreSQLLoginUseCase(AbstractLoginUseCase):
-    def __init__(self, uow: PostgreSQLUnitOfWork, token_service: AbstractTokenService):
+    def __init__(self, uow: PostgreSQLAuthUnitOfWork, token_service: AbstractTokenService):
         self._uow = uow
         self._token_service = token_service
 

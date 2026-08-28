@@ -4,14 +4,14 @@ from datetime import UTC, datetime, timedelta
 from domain.refresh_token.models import CreateRefreshTokenDTO
 from domain.token.models import LoginResultDTO, TokenDTO
 from domain.token.repository import AbstractTokenService
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from infrastructure.security.hash_token import hash_token
 
 REFRESH_TOKEN_TTL = timedelta(days=14)
 
 
 async def issue_token_pair(
-    uow: PostgreSQLUnitOfWork, token_service: AbstractTokenService, payload: TokenDTO
+    uow: PostgreSQLAuthUnitOfWork, token_service: AbstractTokenService, payload: TokenDTO
 ) -> LoginResultDTO:
     access_token = token_service.create_access_token(payload=payload)
 

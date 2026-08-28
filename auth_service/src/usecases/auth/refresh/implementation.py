@@ -4,7 +4,7 @@ from domain.refresh_token.exceptions import InvalidRefreshToken
 from domain.refresh_token.issue_tokens import issue_token_pair
 from domain.token.models import LoginResultDTO, MembershipAdmission, TokenDTO
 from domain.token.repository import AbstractTokenService
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from infrastructure.security.hash_token import hash_token
 from logger import get_logger
 
@@ -14,7 +14,7 @@ log = get_logger(__name__)
 
 
 class PostgreSQLRefreshUseCase(AbstractRefreshUseCase):
-    def __init__(self, uow: PostgreSQLUnitOfWork, token_service: AbstractTokenService):
+    def __init__(self, uow: PostgreSQLAuthUnitOfWork, token_service: AbstractTokenService):
         self._uow = uow
         self._token_service = token_service
 

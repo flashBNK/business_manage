@@ -11,7 +11,7 @@ from domain.secret.models import CreateSecretDTO
 from domain.token.models import LoginResultDTO, MembershipAdmission, TokenDTO
 from domain.token.repository import AbstractTokenService
 from infrastructure.databases.postgresql.models.invite import InviteStatus
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from logger import get_logger
 
 from .abstract import AbstractCompleteEmployeeInviteUseCase
@@ -20,7 +20,7 @@ log = get_logger(__name__)
 
 
 class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseCase):
-    def __init__(self, uow: PostgreSQLUnitOfWork, token_service: AbstractTokenService):
+    def __init__(self, uow: PostgreSQLAuthUnitOfWork, token_service: AbstractTokenService):
         self._uow = uow
         self._token_service = token_service
 

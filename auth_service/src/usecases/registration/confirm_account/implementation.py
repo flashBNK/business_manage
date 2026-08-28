@@ -4,7 +4,7 @@ from domain.account.models import AccountDTO, ConfirmAccountDTO, CreateAccountDT
 from domain.invite.exceptions import InvalidOrExpiredCode, TooManyAttempts
 from domain.invite.models import UpdateInviteDTO
 from infrastructure.databases.postgresql.models.invite import InviteStatus
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from logger import get_logger
 
 from .abstract import AbstractConfirmAccountUseCase
@@ -15,7 +15,7 @@ MAX_ATTEMPTS = 5
 
 
 class PostgreSQLConfirmAccountUseCase(AbstractConfirmAccountUseCase):
-    def __init__(self, uow: PostgreSQLUnitOfWork):
+    def __init__(self, uow: PostgreSQLAuthUnitOfWork):
         self._uow = uow
 
     async def execute(self, dto: ConfirmAccountDTO) -> AccountDTO:

@@ -7,7 +7,7 @@ from domain.invite.exceptions import InvalidOrExpiredCode
 from domain.invite.models import UpdateInviteDTO
 from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
 from infrastructure.databases.postgresql.models.invite import InviteStatus
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from logger import get_logger
 
 from .abstract import AbstractConfirmUpdateAccountUseCase
@@ -16,7 +16,7 @@ log = get_logger(__name__)
 
 
 class PostgreSQLConfirmUpdateAccountUseCase(AbstractConfirmUpdateAccountUseCase):
-    def __init__(self, uow: PostgreSQLUnitOfWork):
+    def __init__(self, uow: PostgreSQLAuthUnitOfWork):
         self._uow = uow
 
     async def execute(self, dto: ConfirmEmailChangeDTO) -> AccountDTO:

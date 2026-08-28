@@ -1,11 +1,11 @@
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from infrastructure.security.hash_token import hash_token
 
 from .abstract import AbstractLogoutUseCase
 
 
 class PostgreSQLLogoutUseCase(AbstractLogoutUseCase):
-    def __init__(self, uow: PostgreSQLUnitOfWork):
+    def __init__(self, uow: PostgreSQLAuthUnitOfWork):
         self._uow = uow
 
     async def execute(self, refresh_token: str) -> None:

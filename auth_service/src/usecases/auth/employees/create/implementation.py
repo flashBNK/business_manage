@@ -11,7 +11,7 @@ from domain.member.models import (
 )
 from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
 from domain.user.models import CreateUserDTO
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from logger import get_logger
 
 from .abstract import AbstractCreateEmployeeUseCase
@@ -20,7 +20,7 @@ log = get_logger(__name__)
 
 
 class PostgreSQLCreateEmployeeUseCase(AbstractCreateEmployeeUseCase):
-    def __init__(self, uow: PostgreSQLUnitOfWork):
+    def __init__(self, uow: PostgreSQLAuthUnitOfWork):
         self._uow = uow
 
     async def execute(self, dto: CreateEmployeeDTO) -> CreateEmployeeResultDTO:

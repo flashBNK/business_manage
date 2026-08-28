@@ -5,7 +5,7 @@ import uuid
 from domain.account.exceptions import AccountForbidden, AccountNotFound, EmailIsUsed
 from domain.account.models import RequestEmailChangeDTO
 from domain.invite.models import CreateInviteDTO
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from logger import get_logger
 
 from .abstract import AbstractUpdateAccountUseCase
@@ -14,7 +14,7 @@ log = get_logger(__name__)
 
 
 class PostgreSQLUpdateAccountUseCase(AbstractUpdateAccountUseCase):
-    def __init__(self, uow: PostgreSQLUnitOfWork):
+    def __init__(self, uow: PostgreSQLAuthUnitOfWork):
         self._uow = uow
 
     async def execute(self, dto: RequestEmailChangeDTO, account_id: uuid.UUID) -> None:

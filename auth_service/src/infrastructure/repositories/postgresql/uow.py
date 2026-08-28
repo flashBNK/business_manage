@@ -10,7 +10,7 @@ from .secret.secret import PostgreSQLSecretRepository
 from .user.user import PostgreSQLUserRepository
 
 
-class PostgreSQLUnitOfWork:
+class PostgreSQLAuthUnitOfWork:
     def __init__(self, session: AsyncSession):
         self._session: AsyncSession = session
 

@@ -7,17 +7,13 @@ TCreateDTO = TypeVar("TCreateDTO")
 TUpdateDTO = TypeVar("TUpdateDTO")
 
 
-class AbstractRepository[TEntity, TId, TCreateDTO, TUpdateDTO](ABC):
+class AbstractRepository[TEntity, TId, TCreateDTO](ABC):
     @abstractmethod
     async def get(self, entity_id: TId) -> TEntity | None:
         raise NotImplementedError
 
     @abstractmethod
     async def create(self, dto: TCreateDTO) -> TEntity:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def update(self, entity_id: TId, dto: TUpdateDTO) -> TEntity:
         raise NotImplementedError
 
     @abstractmethod

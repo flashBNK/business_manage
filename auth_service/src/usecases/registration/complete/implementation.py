@@ -12,7 +12,7 @@ from domain.token.models import LoginResultDTO, MembershipAdmission, TokenDTO
 from domain.token.repository import AbstractTokenService
 from domain.user.models import CreateUserDTO
 from infrastructure.databases.postgresql.models.members import MemberRoles
-from infrastructure.repositories.postgresql.uow import PostgreSQLUnitOfWork
+from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from logger import get_logger
 
 from .abstract import AbstractCompleteSignUpUseCase
@@ -21,7 +21,7 @@ log = get_logger(__name__)
 
 
 class PostgreSQLCompleteSignUpUseCase(AbstractCompleteSignUpUseCase):
-    def __init__(self, uow: PostgreSQLUnitOfWork, token_service: AbstractTokenService):
+    def __init__(self, uow: PostgreSQLAuthUnitOfWork, token_service: AbstractTokenService):
         self._uow = uow
         self._token_service = token_service
 
