@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from uuid import UUID
+from dataclasses import dataclass, field
+from uuid import UUID, uuid4
 
 
 @dataclass(slots=True)
@@ -7,13 +7,25 @@ class StructAdmDTO:
     id: UUID
     company_id: UUID
     name: str
-    path: str
+    path: str | None = None
     manager_id: UUID | None = None
+
+
+@dataclass(slots=True)
+class UpdateStructAdmDTO:
+    name: str
+    manager_id: UUID | None = None
+
+
+@dataclass(slots=True)
+class MoveStructAdmDTO:
+    new_parent_id: UUID
 
 
 @dataclass(slots=True)
 class CreateStructAdmDTO:
     company_id: UUID
     name: str
+    id: UUID = field(default_factory=uuid4)
     path: str | None = None
     manager_id: UUID | None = None
