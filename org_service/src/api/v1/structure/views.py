@@ -4,7 +4,7 @@ from domain.struct_adm.exceptions import InvalidRequestStructAdm, NodeHasDepende
 from domain.struct_adm.models import CreateStructAdmDTO, MoveStructAdmDTO, StructAdmDTO, UpdateStructAdmDTO
 from domain.token.models import MemberRoles, TokenDTO
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from uscases.structure.struct_adm.create.abstract import AbstractCreateStructAdmUseCase
 from uscases.structure.struct_adm.delete.abstract import AbstractDeleteStructAdmUseCase
 from uscases.structure.struct_adm.get.abstract import AbstractGetStructAdmUseCase
@@ -162,7 +162,7 @@ async def delete_struct_adm(
     company_id: UUID,
     usecase: AbstractDeleteStructAdmUseCase = Depends(delete_struct_adm_use_case),
     _token: TokenDTO = Depends(require_company_role(MemberRoles.ADMIN)),
-) -> JSONResponse:
+) -> Response:
     try:
         await usecase.execute(struct_adm_id=struct_adm_id, company_id=company_id)
     except InvalidRequestStructAdm as exc:
@@ -170,7 +170,7 @@ async def delete_struct_adm(
     except (NodeHasDependentsException, NodeHasRootStructAdm) as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
 
-    return JSONResponse({}, status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 def _to_schema(dto: StructAdmDTO) -> StructAdmSchema:

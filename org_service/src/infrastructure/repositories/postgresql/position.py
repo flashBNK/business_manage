@@ -45,6 +45,9 @@ class PostgreSQLPositionRepository(AbstractPositionRepository):
         result = await self._session.execute(stmt)
         positions = result.scalars().all()
 
+        if not positions:
+            return []
+
         return [self._to_domain(position) for position in positions]
 
     async def update(self, position_id: UUID, dto=UpdatePositionDTO) -> PositionDTO | None:

@@ -4,7 +4,7 @@ from domain.position.exceptions import InvalidRequestPosition, PositionNotFound
 from domain.position.models import CreatePositionDTO, PositionDTO, UpdatePositionDTO
 from domain.token.models import MemberRoles, TokenDTO
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from uscases.position.create.abstract import AbstractCreatePositionUseCase
 from uscases.position.delete.abstract import AbstractDeletePositionUseCase
 from uscases.position.get.abstract import AbstractGetPositionUseCase
@@ -103,13 +103,13 @@ async def delete_positions(
     position_id: UUID,
     usecase: AbstractDeletePositionUseCase = Depends(delete_position_use_case),
     _token: TokenDTO = Depends(require_company_role(MemberRoles.MEMBER)),
-) -> JSONResponse:
+) -> Response:
     try:
         await usecase.execute(company_id=company_id, position_id=position_id)
     except PositionNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
 
-    return JSONResponse({}, status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 def _to_schema(dto: PositionDTO) -> PositionSchema:
