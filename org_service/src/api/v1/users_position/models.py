@@ -7,7 +7,6 @@ from pydantic import BaseModel
 class CreateUsersPositionSchema(BaseModel):
     user_id: UUID
     position_id: UUID
-    role: Role
 
 
 class UsersPositionSchema(CreateUsersPositionSchema):
@@ -32,4 +31,3 @@ class EmployeePositionSchema(BaseModel):
 class UpdateUsersPositionSchema(BaseModel):
     struct_adm_id: UUID
     position_id: UUID
-    role: Role

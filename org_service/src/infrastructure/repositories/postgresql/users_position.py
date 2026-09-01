@@ -4,13 +4,16 @@ from domain.users_position.exceptions import UsersPositionNotFound
 from domain.users_position.models import (
     CreateUsersPositionDTO,
     EmployeePositionDTO,
+    GetManagerPositionDTO,
     GetUsersPositionDTO,
+    UpdateRoleUsersPositionDTO,
     UpdateUsersPositionDTO,
     UsersPositionDTO,
 )
 from domain.users_position.repository import AbstractUsersPositionRepository
 from infrastructure.databases.postgresql.models.position import Position as PositionModel
 from infrastructure.databases.postgresql.models.struct_adm import StructAdm as StructAdmModel
+from infrastructure.databases.postgresql.models.users_position import Role
 from infrastructure.databases.postgresql.models.users_position import UsersPosition as UsersPositionModel
 from infrastructure.databases.postgresql.models.users_replica import UsersReplica as UsersReplicaModel
 from infrastructure.repositories.postgresql.struct_adm import LtreeSQLType
@@ -27,7 +30,6 @@ class PostgreSQLUsersPositionRepository(AbstractUsersPositionRepository):
             user_id=dto.user_id,
             struct_adm_id=dto.struct_adm_id,
             position_id=dto.position_id,
-            role=dto.role,
         )
 
         self._session.add(db_users_position)
@@ -119,8 +121,6 @@ class PostgreSQLUsersPositionRepository(AbstractUsersPositionRepository):
             users_position.struct_adm_id = dto.new_struct_adm_id
         if dto.new_position_id:
             users_position.position_id = dto.new_position_id
-        if dto.new_role:
-            users_position.role = dto.new_role
 
         await self._session.flush()
         return users_position
@@ -148,6 +148,43 @@ class PostgreSQLUsersPositionRepository(AbstractUsersPositionRepository):
             raise UsersPositionNotFound
 
         return users_position
+
+    async def update_role(self, dto: UpdateRoleUsersPositionDTO) -> UsersPositionDTO:
+        if dto.role == Role.MANAGER:
+            stmt = (
+                select(UsersPositionModel)
+                .where(UsersPositionModel.struct_adm_id == dto.struct_adm_id)
+                .where(UsersPositionModel.role == Role.MANAGER)
+            )
+            result = await self._session.execute(stmt)
+            old_users_position = result.scalar_one_or_none()
+            if old_users_position:
+                old_users_position.role = Role.MEMBER
+
+        stmt = (
+            select(UsersPositionModel)
+            .where(UsersPositionModel.struct_adm_id == dto.struct_adm_id)
+            .where(UsersPositionModel.position_id == dto.position_id)
+            .where(UsersPositionModel.user_id == dto.user_id)
+        )
+        result = await self._session.execute(stmt)
+        users_position = result.scalar_one_or_none()
+        users_position.role = dto.role
+        await self._session.flush()
+        return self._to_domain(users_position)
+
+    async def get_manager(self, dto: GetManagerPositionDTO) -> UsersPositionDTO | None:
+        stmt = (
+            select(UsersPositionModel)
+            .where(UsersPositionModel.struct_adm_id == dto.struct_adm_id)
+            .where(UsersPositionModel.user_id == dto.user_id)
+            .where(UsersPositionModel.role == Role.MANAGER)
+        )
+        result = await self._session.execute(stmt)
+        users_position = result.scalar_one_or_none()
+        if users_position is None:
+            return None
+        return self._to_domain(users_position)
 
     @staticmethod
     def _to_domain(users_position: UsersPositionModel) -> UsersPositionDTO:

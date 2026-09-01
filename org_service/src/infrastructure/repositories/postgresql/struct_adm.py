@@ -1,7 +1,13 @@
 from uuid import UUID
 
 from domain.struct_adm.exceptions import NodeHasDependentsException, NodeHasRootStructAdm
-from domain.struct_adm.models import CreateStructAdmDTO, StructAdmDTO, UpdateStructAdmDTO
+from domain.struct_adm.models import (
+    AddManagerStructAdmDTO,
+    CreateStructAdmDTO,
+    DeleteManagerStructAdmDTO,
+    StructAdmDTO,
+    UpdateStructAdmDTO,
+)
 from domain.struct_adm.repository import AbstractStructAdmRepository
 from infrastructure.databases.postgresql.models.struct_adm import StructAdm as StructAdmModel
 from logger import get_logger
@@ -172,6 +178,24 @@ class PostgreSQLStructAdmRepository(AbstractStructAdmRepository):
         )
 
         await self._session.execute(stmt)
+
+    async def add_manager(self, dto: AddManagerStructAdmDTO) -> StructAdmDTO:
+        stmt = select(StructAdmModel).where(StructAdmModel.id == dto.struct_adm_id)
+        result = await self._session.execute(stmt)
+        struct_adm = result.scalar_one_or_none()
+
+        struct_adm.manager_id = dto.user_id
+        await self._session.flush()
+        return self._to_domain(struct_adm)
+
+    async def set_null_manager(self, dto: DeleteManagerStructAdmDTO) -> StructAdmDTO:
+        stmt = select(StructAdmModel).where(StructAdmModel.id == dto.struct_adm_id)
+        result = await self._session.execute(stmt)
+        struct_adm = result.scalar_one_or_none()
+
+        struct_adm.manager_id = None
+        await self._session.flush()
+        return self._to_domain(struct_adm)
 
     @staticmethod
     def _to_domain(struct_adm: StructAdmModel) -> StructAdmDTO:

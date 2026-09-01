@@ -7,7 +7,9 @@ from .exceptions import InvalidRequestUsersPosition
 from .models import (
     CreateUsersPositionDTO,
     EmployeePositionDTO,
+    GetManagerPositionDTO,
     GetUsersPositionDTO,
+    UpdateRoleUsersPositionDTO,
     UpdateUsersPositionDTO,
     UsersPositionDTO,
 )
@@ -26,4 +28,12 @@ class AbstractUsersPositionRepository(AbstractRepository[UsersPositionDTO, UUID,
 
     @abstractmethod
     async def update(self, dto: UpdateUsersPositionDTO) -> UsersPositionDTO:
+        raise InvalidRequestUsersPosition
+
+    @abstractmethod
+    async def update_role(self, dto: UpdateRoleUsersPositionDTO) -> UsersPositionDTO:
+        raise InvalidRequestUsersPosition
+
+    @abstractmethod
+    async def get_manager(self, dto: GetManagerPositionDTO) -> UsersPositionDTO | None:
         raise InvalidRequestUsersPosition

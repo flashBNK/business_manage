@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
+from infrastructure.databases.postgresql.models.users_position import Role
+
 
 @dataclass(slots=True)
 class StructAdmDTO:
@@ -29,3 +31,20 @@ class CreateStructAdmDTO:
     id: UUID = field(default_factory=uuid4)
     path: str | None = None
     manager_id: UUID | None = None
+
+
+@dataclass(slots=True)
+class AddManagerStructAdmDTO:
+    user_id: UUID
+    struct_adm_id: UUID
+    position_id: UUID
+
+
+@dataclass(slots=True)
+class DeleteManagerStructAdmDTO(AddManagerStructAdmDTO):
+    pass
+
+
+@dataclass(slots=True)
+class ManagerDTO(AddManagerStructAdmDTO):
+    role: Role

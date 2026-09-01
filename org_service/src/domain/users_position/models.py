@@ -9,12 +9,11 @@ class CreateUsersPositionDTO:
     user_id: UUID
     struct_adm_id: UUID
     position_id: UUID
-    role: Role
 
 
 @dataclass(slots=True)
 class UsersPositionDTO(CreateUsersPositionDTO):
-    pass
+    role: Role
 
 
 @dataclass(slots=True)
@@ -40,4 +39,20 @@ class UpdateUsersPositionDTO:
     old_position_id: UUID
     new_struct_adm_id: UUID | None
     new_position_id: UUID | None
-    new_role: Role
+
+
+@dataclass(slots=True)
+class UpdateRoleUsersPositionDTO(GetUsersPositionDTO):
+    role: Role
+
+
+@dataclass(slots=True)
+class GetManagerDTO:
+    struct_adm_id: UUID
+    company_id: UUID
+
+
+@dataclass(slots=True)
+class GetManagerPositionDTO:
+    struct_adm_id: UUID
+    user_id: UUID

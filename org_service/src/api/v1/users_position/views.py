@@ -45,7 +45,6 @@ async def create_users_position(
         user_id=payload.user_id,
         struct_adm_id=struct_adm_id,
         position_id=payload.position_id,
-        role=payload.role,
     )
 
     try:
@@ -125,7 +124,6 @@ async def update_users_positions(
         old_struct_adm_id=struct_adm_id,
         new_struct_adm_id=payload.struct_adm_id,
         new_position_id=payload.position_id,
-        new_role=payload.role,
     )
     try:
         users_position = await usecase.execute(company_id=company_id, dto=dto)
