@@ -45,3 +45,7 @@ class AbstractStructAdmRepository(AbstractRepository[StructAdmDTO, UUID, CreateS
     @abstractmethod
     async def set_null_manager(self, dto: DeleteManagerStructAdmDTO) -> StructAdmDTO:
         raise StructAdmNotFound
+
+    @abstractmethod
+    async def list_tree(self, company_id: UUID) -> list[StructAdmDTO]:
+        raise StructAdmNotFound

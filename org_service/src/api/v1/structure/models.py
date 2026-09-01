@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class CreateStructAdmSchema(BaseModel):
@@ -17,3 +17,17 @@ class StructAdmSchema(BaseModel):
     name: str
     path: str
     manager_id: UUID | None = None
+
+
+class StructAdmTreeSchema(BaseModel):
+    id: UUID
+    name: str
+    manager_id: UUID | None
+    children: list["StructAdmTreeSchema"] = Field(default_factory=list)
+
+
+class CompanyStructureSchema(BaseModel):
+    id: UUID
+    name: str
+    manager_id: UUID | None
+    children: list[StructAdmTreeSchema] = Field(default_factory=list)

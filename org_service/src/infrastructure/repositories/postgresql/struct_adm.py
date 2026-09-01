@@ -197,6 +197,13 @@ class PostgreSQLStructAdmRepository(AbstractStructAdmRepository):
         await self._session.flush()
         return self._to_domain(struct_adm)
 
+    async def list_tree(self, company_id: UUID) -> list[StructAdmDTO]:
+        stmt = select(StructAdmModel).where(StructAdmModel.company_id == company_id).order_by(StructAdmModel.path)
+        result = await self._session.execute(stmt)
+        struct_adms = result.scalars().all()
+
+        return [self._to_domain(struct_adm) for struct_adm in struct_adms]
+
     @staticmethod
     def _to_domain(struct_adm: StructAdmModel) -> StructAdmDTO:
         return StructAdmDTO(

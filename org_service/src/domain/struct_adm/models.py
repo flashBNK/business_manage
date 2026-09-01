@@ -48,3 +48,20 @@ class DeleteManagerStructAdmDTO(AddManagerStructAdmDTO):
 @dataclass(slots=True)
 class ManagerDTO(AddManagerStructAdmDTO):
     role: Role
+
+
+@dataclass(slots=True)
+class CompanyStructureDTO:
+    id: UUID
+    name: str
+    manager_id: UUID | None = None
+    children: list["StructAdmTreeDTO"] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class StructAdmTreeDTO:
+    id: UUID
+    name: str
+    path: str
+    manager_id: UUID | None = None
+    children: list["StructAdmTreeDTO"] = field(default_factory=list)

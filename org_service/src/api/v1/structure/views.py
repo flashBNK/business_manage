@@ -1,7 +1,14 @@
 from uuid import UUID
 
 from domain.struct_adm.exceptions import InvalidRequestStructAdm, NodeHasDependentsException, NodeHasRootStructAdm
-from domain.struct_adm.models import CreateStructAdmDTO, MoveStructAdmDTO, StructAdmDTO, UpdateStructAdmDTO
+from domain.struct_adm.models import (
+    CompanyStructureDTO,
+    CreateStructAdmDTO,
+    MoveStructAdmDTO,
+    StructAdmDTO,
+    StructAdmTreeDTO,
+    UpdateStructAdmDTO,
+)
 from domain.token.models import MemberRoles, TokenDTO
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, Response
@@ -10,6 +17,7 @@ from uscases.structure.struct_adm.delete.abstract import AbstractDeleteStructAdm
 from uscases.structure.struct_adm.get.abstract import AbstractGetStructAdmUseCase
 from uscases.structure.struct_adm.get_ancestors.abstract import AbstractGetAncestorsStructAdmUseCase
 from uscases.structure.struct_adm.get_children.abstract import AbstractGetChildrenStructAdmUseCase
+from uscases.structure.struct_adm.get_company_structure.abstract import AbstractGetCompanyStructureUseCase
 from uscases.structure.struct_adm.get_descendants.abstract import AbstractGetDescendantsStructAdmUseCase
 from uscases.structure.struct_adm.move.abstract import AbstractMoveStructAdmUseCase
 from uscases.structure.struct_adm.rename.abstract import AbstractRenameStructAdmUseCase
@@ -20,12 +28,19 @@ from .dependencies import (
     delete_struct_adm_use_case,
     get_ancestors_use_case,
     get_children_use_case,
+    get_company_structure_use_case,
     get_descendants_use_case,
     get_struct_adm_use_case,
     move_struct_adm_use_case,
     rename_struct_adm_use_case,
 )
-from .models import CreateStructAdmSchema, MoveStructAdmSchema, StructAdmSchema
+from .models import (
+    CompanyStructureSchema,
+    CreateStructAdmSchema,
+    MoveStructAdmSchema,
+    StructAdmSchema,
+    StructAdmTreeSchema,
+)
 
 router = APIRouter(prefix="/companies")
 
@@ -173,6 +188,23 @@ async def delete_struct_adm(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.get("/{company_id}/structure", response_model=StructAdmSchema)
+async def get_company_structure(
+    _request: Request,
+    company_id: UUID,
+    usecase: AbstractGetCompanyStructureUseCase = Depends(get_company_structure_use_case),
+    _token: TokenDTO = Depends(require_company_role(MemberRoles.MEMBER)),
+) -> JSONResponse:
+    try:
+        structure = await usecase.execute(company_id=company_id)
+    except InvalidRequestStructAdm as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from None
+
+    return JSONResponse(
+        _to_schema_company_structure(structure).model_dump(mode="json"), status_code=status.HTTP_200_OK
+    )
+
+
 def _to_schema(dto: StructAdmDTO) -> StructAdmSchema:
     return StructAdmSchema(
         id=dto.id,
@@ -180,4 +212,24 @@ def _to_schema(dto: StructAdmDTO) -> StructAdmSchema:
         company_id=dto.company_id,
         path=dto.path,
         manager_id=dto.manager_id,
+    )
+
+
+def _to_schema_struct_adm_tree(structure_tree: StructAdmTreeDTO) -> StructAdmTreeSchema:
+    return StructAdmTreeSchema(
+        id=structure_tree.id,
+        name=structure_tree.name,
+        manager_id=structure_tree.manager_id,
+        children=[_to_schema_struct_adm_tree(child) for child in structure_tree.children],
+    )
+
+
+def _to_schema_company_structure(
+    dto: CompanyStructureDTO,
+) -> CompanyStructureSchema:
+    return CompanyStructureSchema(
+        id=dto.id,
+        name=dto.name,
+        manager_id=dto.manager_id,
+        children=[_to_schema_struct_adm_tree(child) for child in dto.children],
     )

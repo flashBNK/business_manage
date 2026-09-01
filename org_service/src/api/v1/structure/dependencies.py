@@ -8,6 +8,7 @@ from uscases.structure.struct_adm.delete.implementation import PostgreSQLDeleteS
 from uscases.structure.struct_adm.get.implementation import PostgreSQLGetStructAdmUseCase
 from uscases.structure.struct_adm.get_ancestors.implementation import PostgreSQLGetAncestorsUseCase
 from uscases.structure.struct_adm.get_children.implementation import PostgreSQLGetChildrenUseCase
+from uscases.structure.struct_adm.get_company_structure.implementation import PostgreSQLGetCompanyStructureUseCase
 from uscases.structure.struct_adm.get_descendants.implementation import PostgreSQLGetDescendantsUseCase
 from uscases.structure.struct_adm.move.implementation import PostgreSQLMoveStructAdmUseCase
 from uscases.structure.struct_adm.rename.implementation import PostgreSQLRenameStructAdmUseCase
@@ -57,6 +58,11 @@ def move_struct_adm_use_case(session: AsyncSession = Depends(get_async_session))
 def delete_struct_adm_use_case(session: AsyncSession = Depends(get_async_session)):
     uow = get_unit_of_work(session=session)
     return PostgreSQLDeleteStructAdmUseCase(uow=uow)
+
+
+def get_company_structure_use_case(session: AsyncSession = Depends(get_async_session)):
+    uow = get_unit_of_work(session=session)
+    return PostgreSQLGetCompanyStructureUseCase(uow=uow)
 
 
 # def login_use_case(session: AsyncSession = Depends(get_async_session)):
