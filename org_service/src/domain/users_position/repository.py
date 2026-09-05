@@ -37,3 +37,7 @@ class AbstractUsersPositionRepository(AbstractRepository[UsersPositionDTO, UUID,
     @abstractmethod
     async def get_manager(self, dto: GetManagerPositionDTO) -> UsersPositionDTO | None:
         raise InvalidRequestUsersPosition
+
+    @abstractmethod
+    async def list_by_position(self, company_id: UUID, position_id: UUID) -> list[EmployeePositionDTO]:
+        raise InvalidRequestUsersPosition

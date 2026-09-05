@@ -13,3 +13,11 @@ class AbstractStructAdmPositionRepository(
     @abstractmethod
     async def list_by_struct_adm_id(self, struct_adm_id: UUID) -> list[StructAdmPositionDTO]:
         raise InvalidRequestStructAdmPosition
+
+    @abstractmethod
+    async def get_by_pair(self, dto: CreateStructAdmPositionDTO) -> StructAdmPositionDTO | None:
+        raise InvalidRequestStructAdmPosition
+
+    @abstractmethod
+    async def list_by_position_id(self, position_id: UUID) -> list[StructAdmPositionDTO]:
+        raise InvalidRequestStructAdmPosition

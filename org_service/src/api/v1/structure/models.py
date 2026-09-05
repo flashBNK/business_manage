@@ -16,18 +16,15 @@ class StructAdmSchema(BaseModel):
     company_id: UUID
     name: str
     path: str
-    manager_id: UUID | None = None
 
 
 class StructAdmTreeSchema(BaseModel):
     id: UUID
     name: str
-    manager_id: UUID | None
     children: list["StructAdmTreeSchema"] = Field(default_factory=list)
 
 
 class CompanyStructureSchema(BaseModel):
     id: UUID
     name: str
-    manager_id: UUID | None
     children: list[StructAdmTreeSchema] = Field(default_factory=list)

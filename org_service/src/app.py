@@ -6,7 +6,8 @@ from api.v1.routers import router
 from container import Container
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from infrastructure.kafka.consumer_loop import run_event_consumer
+from infrastructure.kafka.consumer.consumer_loop import run_event_consumer
+from infrastructure.kafka.producer.producer_loop import run_outbox_relay
 
 # from infrastructure.kafka.relay import run_outbox_relay
 from logger import get_logger, setup_logging
@@ -33,18 +34,25 @@ async def lifespan(app: FastAPI):
     )
 
     kafka_consumer = container.kafka_consumer()
+    kafka_producer = container.kafka_producer()
     await kafka_consumer.start()
+    await kafka_producer.start()
 
     consumer_task = asyncio.create_task(run_event_consumer(consumer=kafka_consumer, session_manager=sessionmanager))
+    relay_task = asyncio.create_task(run_outbox_relay(producer=kafka_producer, session_manager=sessionmanager))
     try:
         yield
 
     finally:
         consumer_task.cancel()
+        relay_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await consumer_task
+            await relay_task
+        await kafka_producer.stop()
+        await kafka_consumer.stop()
         await sessionmanager.close()
-        log.info("application shutdown")
+        log.info("applications shutdown")
 
 
 app = FastAPI(lifespan=lifespan)

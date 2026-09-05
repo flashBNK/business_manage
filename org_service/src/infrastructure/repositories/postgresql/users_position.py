@@ -101,6 +101,46 @@ class PostgreSQLUsersPositionRepository(AbstractUsersPositionRepository):
 
         return employees
 
+
+    async def list_by_position(self, company_id: UUID, position_id: UUID) -> list[EmployeePositionDTO]:
+        stmt = (
+            select(
+                UsersReplicaModel.id.label("user_id"),
+                UsersReplicaModel.username,
+                PositionModel.id.label("position_id"),
+                PositionModel.name.label("position_name"),
+                UsersPositionModel.role,
+            )
+            .join(UsersReplicaModel, UsersReplicaModel.id == UsersPositionModel.user_id)
+            .join(PositionModel, PositionModel.id == UsersPositionModel.position_id)
+            .join(StructAdmModel, StructAdmModel.id == UsersPositionModel.struct_adm_id)
+            .where(
+                StructAdmModel.company_id == company_id,
+                UsersReplicaModel.company_id == company_id,
+                PositionModel.id == position_id,
+                UsersPositionModel.position_id == position_id,
+            )
+        )
+
+        result = await self._session.execute(stmt)
+        db_employees = result.all()
+
+        if not db_employees:
+            return []
+
+        employees = [
+            EmployeePositionDTO(
+                user_id=user_id,
+                username=username,
+                position_id=position_id,
+                position_name=position_name,
+                role=role,
+            )
+            for user_id, username, position_id, position_name, role in db_employees
+        ]
+
+        return employees
+
     async def get(self, struct_adm_position_id: UUID) -> UsersPositionDTO | None:
         pass
 
@@ -125,7 +165,7 @@ class PostgreSQLUsersPositionRepository(AbstractUsersPositionRepository):
         await self._session.flush()
         return users_position
 
-    async def get_for_check(self, dto: GetUsersPositionDTO, company_id: UUID) -> UsersPositionModel:
+    async def get_for_check(self, dto: GetUsersPositionDTO, company_id: UUID) -> UsersPositionDTO:
         stmt = (
             select(UsersPositionModel)
             .join(UsersReplicaModel, UsersReplicaModel.id == UsersPositionModel.user_id)
@@ -147,7 +187,8 @@ class PostgreSQLUsersPositionRepository(AbstractUsersPositionRepository):
         if users_position is None:
             raise UsersPositionNotFound
 
-        return users_position
+        return self._to_domain(users_position)
+
 
     async def update_role(self, dto: UpdateRoleUsersPositionDTO) -> UsersPositionDTO:
         if dto.role == Role.MANAGER:
@@ -177,7 +218,6 @@ class PostgreSQLUsersPositionRepository(AbstractUsersPositionRepository):
         stmt = (
             select(UsersPositionModel)
             .where(UsersPositionModel.struct_adm_id == dto.struct_adm_id)
-            .where(UsersPositionModel.user_id == dto.user_id)
             .where(UsersPositionModel.role == Role.MANAGER)
         )
         result = await self._session.execute(stmt)

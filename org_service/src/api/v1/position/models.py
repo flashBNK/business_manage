@@ -18,3 +18,8 @@ class PositionSchema(BaseModel):
     company_id: UUID
     name: str
     description: str | None = None
+
+
+class PositionListSchema(BaseModel):
+    total: int
+    positions: list[PositionSchema]

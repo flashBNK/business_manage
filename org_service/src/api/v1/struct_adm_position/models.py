@@ -10,3 +10,8 @@ class CreateStructAdmPositionSchema(BaseModel):
 
 class StructAdmPositionSchema(CreateStructAdmPositionSchema):
     pass
+
+
+class StructAdmPositionListSchema(BaseModel):
+    total: int
+    positions: list[StructAdmPositionSchema]

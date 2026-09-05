@@ -37,7 +37,6 @@ class PostgreSQLStructAdmRepository(AbstractStructAdmRepository):
             company_id=dto.company_id,
             name=dto.name,
             path=Ltree(dto.path),
-            manager_id=dto.manager_id,
         )
 
         self._session.add(db_struct_adm)
@@ -50,7 +49,7 @@ class PostgreSQLStructAdmRepository(AbstractStructAdmRepository):
 
         stmt = (
             insert(StructAdmModel)
-            .values(company_id=dto.company_id, name=dto.name, path=path, manager_id=dto.manager_id)
+            .values(company_id=dto.company_id, name=dto.name, path=path)
             .on_conflict_do_update(index_elements=["path"], set_={"name": dto.name})
             .returning(StructAdmModel)
         )
@@ -157,8 +156,6 @@ class PostgreSQLStructAdmRepository(AbstractStructAdmRepository):
 
         if dto.name:
             struct_adm.name = dto.name
-        if dto.manager_id:
-            struct_adm.manager_id = dto.manager_id
         self._session.add(struct_adm)
         await self._session.flush()
 
@@ -179,23 +176,6 @@ class PostgreSQLStructAdmRepository(AbstractStructAdmRepository):
 
         await self._session.execute(stmt)
 
-    async def add_manager(self, dto: AddManagerStructAdmDTO) -> StructAdmDTO:
-        stmt = select(StructAdmModel).where(StructAdmModel.id == dto.struct_adm_id)
-        result = await self._session.execute(stmt)
-        struct_adm = result.scalar_one_or_none()
-
-        struct_adm.manager_id = dto.user_id
-        await self._session.flush()
-        return self._to_domain(struct_adm)
-
-    async def set_null_manager(self, dto: DeleteManagerStructAdmDTO) -> StructAdmDTO:
-        stmt = select(StructAdmModel).where(StructAdmModel.id == dto.struct_adm_id)
-        result = await self._session.execute(stmt)
-        struct_adm = result.scalar_one_or_none()
-
-        struct_adm.manager_id = None
-        await self._session.flush()
-        return self._to_domain(struct_adm)
 
     async def list_tree(self, company_id: UUID) -> list[StructAdmDTO]:
         stmt = select(StructAdmModel).where(StructAdmModel.company_id == company_id).order_by(StructAdmModel.path)
@@ -211,5 +191,4 @@ class PostgreSQLStructAdmRepository(AbstractStructAdmRepository):
             company_id=struct_adm.company_id,
             name=struct_adm.name,
             path=str(struct_adm.path),
-            manager_id=struct_adm.manager_id,
         )

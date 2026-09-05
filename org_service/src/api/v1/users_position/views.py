@@ -2,6 +2,7 @@ from uuid import UUID
 
 from domain.position.exceptions import PositionNotFound
 from domain.struct_adm.exceptions import StructAdmNotFound
+from domain.struct_adm_position.exceptions import StructAdmPositionNotFound
 from domain.token.models import MemberRoles, TokenDTO
 from domain.users_position.exceptions import UsersPositionNotFound
 from domain.users_position.models import (
@@ -14,6 +15,7 @@ from domain.users_position.models import (
 from domain.users_replica.exceptions import UsersReplicaNotFound
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, Response
+from sqlalchemy.exc import IntegrityError
 from uscases.users_position.create.abstract import AbstractCreateUsersPositionUseCase
 from uscases.users_position.delete.abstract import AbstractDeleteUsersPositionUseCase
 from uscases.users_position.list_by_struct_adm.abstract import AbstractListUsersPositionByStructAdmUseCase
@@ -27,7 +29,8 @@ from .dependencies import (
     list_users_position_by_struct_adm_use_case,
     update_users_position_by_struct_adm_use_case,
 )
-from .models import CreateUsersPositionSchema, EmployeePositionSchema, UpdateUsersPositionSchema, UsersPositionSchema
+from .models import CreateUsersPositionSchema, EmployeePositionSchema, UpdateUsersPositionSchema, UsersPositionSchema, \
+    UsersPositionListSchema
 
 router = APIRouter(prefix="/companies")
 
@@ -49,15 +52,17 @@ async def create_users_position(
 
     try:
         users_position = await usecase.execute(dto=dto, company_id=company_id)
-    except (PositionNotFound, StructAdmNotFound, UsersReplicaNotFound) as exc:
+    except (PositionNotFound, StructAdmNotFound, UsersReplicaNotFound, StructAdmPositionNotFound) as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
+    except IntegrityError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
 
     return JSONResponse(
         _to_schema_users_position(users_position).model_dump(mode="json"), status_code=status.HTTP_201_CREATED
     )
 
 
-@router.get("/{company_id}/structure/{struct_adm_id}/employees", response_model=EmployeePositionSchema)
+@router.get("/{company_id}/structure/{struct_adm_id}/employees", response_model=UsersPositionListSchema)
 async def list_by_struct_adm(
     _request: Request,
     company_id: UUID,
@@ -73,19 +78,16 @@ async def list_by_struct_adm(
     except (PositionNotFound, StructAdmNotFound) as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
 
-    content = {
-        "struct_adm": _to_schema_struct_adm(struct_adm).model_dump(mode="json"),
-        "total": len(employees),
-        "employees": [_to_schema_employee_position(employee).model_dump(mode="json") for employee in employees],
-    }
+    content = UsersPositionListSchema(
+        struct_adm=_to_schema_struct_adm(struct_adm).model_dump(mode="json"),
+        total=len(employees),
+        employees=[_to_schema_employee_position(employee).model_dump(mode="json") for employee in employees],
+    )
 
-    return JSONResponse(content, status_code=status.HTTP_200_OK)
+    return JSONResponse(content.model_dump(mode="json"), status_code=status.HTTP_200_OK)
 
 
-@router.delete(
-    "/{company_id}/structure/{struct_adm_id}/positions/{position_id}/employees/{user_id}",
-    response_model=UsersPositionSchema,
-)
+@router.delete("/{company_id}/structure/{struct_adm_id}/positions/{position_id}/employees/{user_id}")
 async def delete_users_positions(
     _request: Request,
     company_id: UUID,
@@ -129,6 +131,8 @@ async def update_users_positions(
         users_position = await usecase.execute(company_id=company_id, dto=dto)
     except (PositionNotFound, StructAdmNotFound, UsersReplicaNotFound, UsersPositionNotFound) as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
+    except IntegrityError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
 
     return JSONResponse(
         _to_schema_users_position(users_position).model_dump(mode="json"), status_code=status.HTTP_200_OK

@@ -1,6 +1,9 @@
 from uuid import UUID
 
-from domain.struct_adm.exceptions import InvalidRequestStructAdm, NodeHasDependentsException, NodeHasRootStructAdm
+from sqlalchemy.exc import IntegrityError
+
+from domain.struct_adm.exceptions import InvalidRequestStructAdm, NodeHasDependentsException, NodeHasRootStructAdm, \
+    StructAdmHasUsers
 from domain.struct_adm.models import (
     CompanyStructureDTO,
     CreateStructAdmDTO,
@@ -170,7 +173,7 @@ async def move_struct_adm(
     return JSONResponse(_to_schema(struct_adm).model_dump(mode="json"), status_code=status.HTTP_200_OK)
 
 
-@router.delete("/{company_id}/structure/{struct_adm_id}", response_model=StructAdmSchema)
+@router.delete("/{company_id}/structure/{struct_adm_id}")
 async def delete_struct_adm(
     _request: Request,
     struct_adm_id: UUID,
@@ -182,13 +185,13 @@ async def delete_struct_adm(
         await usecase.execute(struct_adm_id=struct_adm_id, company_id=company_id)
     except InvalidRequestStructAdm as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from None
-    except (NodeHasDependentsException, NodeHasRootStructAdm) as exc:
+    except (NodeHasDependentsException, NodeHasRootStructAdm, StructAdmHasUsers) as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.get("/{company_id}/structure", response_model=StructAdmSchema)
+@router.get("/{company_id}/structure", response_model=CompanyStructureSchema)
 async def get_company_structure(
     _request: Request,
     company_id: UUID,
@@ -211,7 +214,6 @@ def _to_schema(dto: StructAdmDTO) -> StructAdmSchema:
         name=dto.name,
         company_id=dto.company_id,
         path=dto.path,
-        manager_id=dto.manager_id,
     )
 
 
@@ -219,7 +221,6 @@ def _to_schema_struct_adm_tree(structure_tree: StructAdmTreeDTO) -> StructAdmTre
     return StructAdmTreeSchema(
         id=structure_tree.id,
         name=structure_tree.name,
-        manager_id=structure_tree.manager_id,
         children=[_to_schema_struct_adm_tree(child) for child in structure_tree.children],
     )
 
@@ -230,6 +231,5 @@ def _to_schema_company_structure(
     return CompanyStructureSchema(
         id=dto.id,
         name=dto.name,
-        manager_id=dto.manager_id,
         children=[_to_schema_struct_adm_tree(child) for child in dto.children],
     )

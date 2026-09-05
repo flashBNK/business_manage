@@ -6,3 +6,8 @@ class InvalidRequestUsersPosition(Exception):
 class UsersPositionNotFound(Exception):
     def __init__(self):
         super().__init__("Users position not found.")
+
+
+class UsersPositionIsUsed(Exception):
+    def __init__(self):
+        super().__init__("Users position is used this position.")

@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from api.v1.position.models import PositionListSchema
 from domain.position.exceptions import PositionNotFound
 from domain.struct_adm.exceptions import StructAdmNotFound
 from domain.struct_adm_position.models import CreateStructAdmPositionDTO, StructAdmPositionDTO
@@ -16,7 +17,7 @@ from .dependencies import (
     delete_struct_adm_position_use_case,
     list_struct_adm_position_use_case,
 )
-from .models import StructAdmPositionSchema
+from .models import StructAdmPositionSchema, StructAdmPositionListSchema
 
 router = APIRouter(prefix="/companies")
 
@@ -40,7 +41,7 @@ async def create_struct_adm_position(
     return JSONResponse(_to_schema(struct_adm_position).model_dump(mode="json"), status_code=status.HTTP_201_CREATED)
 
 
-@router.get("/{company_id}/structure/{struct_adm_id}/positions", response_model=StructAdmPositionSchema)
+@router.get("/{company_id}/structure/{struct_adm_id}/positions", response_model=StructAdmPositionListSchema)
 async def list_struct_adm_positions(
     _request: Request,
     company_id: UUID,
@@ -53,19 +54,17 @@ async def list_struct_adm_positions(
     except StructAdmNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
 
-    content = {
-        "total": len(struct_adm_positions),
-        "positions": [
+    content = PositionListSchema(
+        total=len(struct_adm_positions),
+        positions=[
             _to_schema(struct_adm_position).model_dump(mode="json") for struct_adm_position in struct_adm_positions
         ],
-    }
+    )
 
-    return JSONResponse(content, status_code=status.HTTP_200_OK)
+    return JSONResponse(content.model_dump(mode="json"), status_code=status.HTTP_200_OK)
 
 
-@router.delete(
-    "/{company_id}/structure/{struct_adm_id}/positions/{position_id}", response_model=StructAdmPositionSchema
-)
+@router.delete("/{company_id}/structure/{struct_adm_id}/positions/{position_id}")
 async def delete_positions(
     _request: Request,
     company_id: UUID,

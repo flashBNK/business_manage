@@ -1,5 +1,6 @@
 from infrastructure.repositories.postgresql.company_replica import PostgreSQLCompanyReplicaRepository
 from infrastructure.repositories.postgresql.inbox_event import PostgreSQLInboxEventRepository
+from infrastructure.repositories.postgresql.outbox_event import PostgreSQLOutboxEventRepository
 from infrastructure.repositories.postgresql.position import PostgreSQLPositionRepository
 from infrastructure.repositories.postgresql.struct_adm import PostgreSQLStructAdmRepository
 from infrastructure.repositories.postgresql.struct_adm_position import PostgreSQLStructAdmPositionRepository
@@ -19,6 +20,7 @@ class PostgreSQLOrgUnitOfWork:
         self.position: PostgreSQLPositionRepository | None = None
         self.struct_adm_position: PostgreSQLStructAdmPositionRepository | None = None
         self.users_position: PostgreSQLUsersPositionRepository | None = None
+        self.outbox_event: PostgreSQLOutboxEventRepository | None = None
 
     async def __aenter__(self):
         self.struct_adm = PostgreSQLStructAdmRepository(session=self._session)
@@ -28,6 +30,7 @@ class PostgreSQLOrgUnitOfWork:
         self.position = PostgreSQLPositionRepository(session=self._session)
         self.struct_adm_position = PostgreSQLStructAdmPositionRepository(session=self._session)
         self.users_position = PostgreSQLUsersPositionRepository(session=self._session)
+        self.outbox_event = PostgreSQLOutboxEventRepository(session=self._session)
 
         return self
 
@@ -44,6 +47,7 @@ class PostgreSQLOrgUnitOfWork:
         self.position = None
         self.struct_adm_position = None
         self.users_position = None
+        self.outbox_event = None
 
     async def commit(self):
         await self._session.commit()

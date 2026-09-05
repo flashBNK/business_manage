@@ -5,6 +5,7 @@ from .struct_adm import StructAdm
 from .struct_adm_position import StructAdmPosition
 from .users_position import UsersPosition
 from .users_replica import UsersReplica
+from .outbox_event import OutboxEvent
 
 __all__ = [
     "Position",
@@ -14,4 +15,5 @@ __all__ = [
     "UsersReplica",
     "CompanyReplica",
     "InboxEvent",
+    "OutboxEvent",
 ]

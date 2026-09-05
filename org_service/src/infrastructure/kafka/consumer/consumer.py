@@ -1,4 +1,4 @@
-from aiokafka import AIOKafkaConsumer
+from aiokafka import AIOKafkaConsumer, TopicPartition, OffsetAndMetadata
 
 
 class KafkaEventConsumer:
@@ -25,5 +25,9 @@ class KafkaEventConsumer:
     def __aiter__(self):
         return self._consumer.__aiter__()
 
-    async def commit(self):
-        await self._consumer.commit()
+    async def commit_message(self, message) -> None:
+        topic_partition = TopicPartition(
+            message.topic,
+            message.partition,
+        )
+        await self._consumer.commit({topic_partition: OffsetAndMetadata(message.offset + 1, "")})

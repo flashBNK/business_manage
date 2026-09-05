@@ -37,8 +37,8 @@ class UpdateUsersPositionDTO:
     user_id: UUID
     old_struct_adm_id: UUID
     old_position_id: UUID
-    new_struct_adm_id: UUID | None
-    new_position_id: UUID | None
+    new_struct_adm_id: UUID | None = None
+    new_position_id: UUID | None = None
 
 
 @dataclass(slots=True)
@@ -55,4 +55,3 @@ class GetManagerDTO:
 @dataclass(slots=True)
 class GetManagerPositionDTO:
     struct_adm_id: UUID
-    user_id: UUID

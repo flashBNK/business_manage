@@ -9,9 +9,9 @@ from domain.users_position.models import GetManagerDTO
 from domain.users_replica.exceptions import UsersReplicaNotFound
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
-from uscases.structure.managers.add.abstract import AbstractAddManagerStructAdmUseCase
-from uscases.structure.managers.delete.abstract import AbstractDeleteManagerStructAdmUseCase
-from uscases.structure.managers.get.abstract import AbstractGetManagerStructAdmUseCase
+from uscases.managers.add.abstract import AbstractAddManagerStructAdmUseCase
+from uscases.managers.delete.abstract import AbstractDeleteManagerStructAdmUseCase
+from uscases.managers.get.abstract import AbstractGetManagerStructAdmUseCase
 
 from ..authorization import require_company_role
 from .dependencies import (

@@ -5,6 +5,8 @@ from domain.position.models import CreatePositionDTO, PositionDTO, UpdatePositio
 from domain.token.models import MemberRoles, TokenDTO
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, Response
+
+from domain.users_position.exceptions import UsersPositionIsUsed
 from uscases.position.create.abstract import AbstractCreatePositionUseCase
 from uscases.position.delete.abstract import AbstractDeletePositionUseCase
 from uscases.position.get.abstract import AbstractGetPositionUseCase
@@ -19,7 +21,7 @@ from .dependencies import (
     list_position_use_case,
     update_position_use_case,
 )
-from .models import CreatePositionSchema, PositionSchema, UpdatePositionSchema
+from .models import CreatePositionSchema, PositionSchema, UpdatePositionSchema, PositionListSchema
 
 router = APIRouter(prefix="/companies")
 
@@ -42,7 +44,7 @@ async def create_position(
     return JSONResponse(_to_schema(position).model_dump(mode="json"), status_code=status.HTTP_201_CREATED)
 
 
-@router.get("/{company_id}/positons", response_model=PositionSchema)
+@router.get("/{company_id}/positions", response_model=PositionListSchema)
 async def list_positions(
     _request: Request,
     company_id: UUID,
@@ -54,15 +56,15 @@ async def list_positions(
     except PositionNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
 
-    content = {
-        "total": len(positions),
-        "positions": [_to_schema(position).model_dump(mode="json") for position in positions],
-    }
+    content = PositionListSchema(
+        total=len(positions),
+        positions=[_to_schema(position).model_dump(mode="json") for position in positions],
+    )
 
-    return JSONResponse(content, status_code=status.HTTP_200_OK)
+    return JSONResponse(content.model_dump(mode="json"), status_code=status.HTTP_200_OK)
 
 
-@router.get("/{company_id}/positons/{position_id}", response_model=PositionSchema)
+@router.get("/{company_id}/positions/{position_id}", response_model=PositionSchema)
 async def get_positions(
     _request: Request,
     company_id: UUID,
@@ -78,14 +80,14 @@ async def get_positions(
     return JSONResponse(_to_schema(position).model_dump(mode="json"), status_code=status.HTTP_200_OK)
 
 
-@router.patch("/{company_id}/positons/{position_id}", response_model=PositionSchema)
+@router.patch("/{company_id}/positions/{position_id}", response_model=PositionSchema)
 async def update_positions(
     _request: Request,
     company_id: UUID,
     position_id: UUID,
     payload: UpdatePositionSchema,
     usecase: AbstractUpdatePositionUseCase = Depends(update_position_use_case),
-    _token: TokenDTO = Depends(require_company_role(MemberRoles.MEMBER)),
+    _token: TokenDTO = Depends(require_company_role(MemberRoles.ADMIN)),
 ) -> JSONResponse:
     dto = UpdatePositionDTO(name=payload.name, description=payload.description)
     try:
@@ -96,18 +98,20 @@ async def update_positions(
     return JSONResponse(_to_schema(position).model_dump(mode="json"), status_code=status.HTTP_200_OK)
 
 
-@router.delete("/{company_id}/positons/{position_id}", response_model=PositionSchema)
+@router.delete("/{company_id}/positions/{position_id}")
 async def delete_positions(
     _request: Request,
     company_id: UUID,
     position_id: UUID,
     usecase: AbstractDeletePositionUseCase = Depends(delete_position_use_case),
-    _token: TokenDTO = Depends(require_company_role(MemberRoles.MEMBER)),
+    _token: TokenDTO = Depends(require_company_role(MemberRoles.ADMIN)),
 ) -> Response:
     try:
         await usecase.execute(company_id=company_id, position_id=position_id)
     except PositionNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
+    except UsersPositionIsUsed as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

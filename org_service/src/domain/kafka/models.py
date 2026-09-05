@@ -14,7 +14,7 @@ class EventType(enum.StrEnum):
 @dataclass
 class EventEnvelopeDTO:
     event_id: UUID
-    event_type: EventType
+    event_type: str
     schema_version: int
     aggregate_id: UUID
     correlation_id: UUID
@@ -27,7 +27,7 @@ class EventEnvelopeDTO:
     def from_dict(data: dict) -> "EventEnvelopeDTO":
         return EventEnvelopeDTO(
             event_id=UUID(data["event_id"]),
-            event_type=EventType(data["event_type"]),
+            event_type=data["event_type"],
             schema_version=data["schema_version"],
             aggregate_id=UUID(data["aggregate_id"]),
             correlation_id=UUID(data["correlation_id"]),

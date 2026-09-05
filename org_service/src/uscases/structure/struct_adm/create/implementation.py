@@ -1,5 +1,6 @@
 import uuid
 
+from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
 from domain.struct_adm.exceptions import InvalidRequestStructAdm
 from domain.struct_adm.models import CreateStructAdmDTO, StructAdmDTO
 from infrastructure.repositories.postgresql.uow import PostgreSQLOrgUnitOfWork
@@ -15,9 +16,11 @@ class PostgreSQLCreateStructAdmUseCase(AbstractCreateStructAdmUseCase):
         self._uow = uow
 
     async def execute(self, dto: CreateStructAdmDTO, parent_id: uuid.UUID) -> StructAdmDTO:
+        correlation_id = uuid.uuid4()
+
         async with self._uow as uow:
             parent = await uow.struct_adm.get(struct_adm_id=parent_id)
-            if not parent:
+            if not parent or parent.company_id != dto.company_id:
                 raise InvalidRequestStructAdm
 
             path = f"{parent.path}.n{dto.id.hex}"
@@ -28,7 +31,22 @@ class PostgreSQLCreateStructAdmUseCase(AbstractCreateStructAdmUseCase):
                 company_id=parent.company_id,
                 name=dto.name,
                 path=path,
-                manager_id=dto.manager_id,
             )
 
-            return await uow.struct_adm.create(dto=struct_adm_dto)
+            struct_adm = await uow.struct_adm.create(dto=struct_adm_dto)
+
+            await uow.outbox_event.create(
+                CreateOutboxEventDTO(
+                    event_type=OutboxEventType.STRUCT_ADM_CREATED,
+                    aggregate_id=struct_adm.id,
+                    correlation_id=correlation_id,
+                    payload={
+                        "struct_adm_id": str(struct_adm.id),
+                        "company_id": str(struct_adm.company_id),
+                        "name": struct_adm.name,
+                        "path": struct_adm.path,
+                    },
+                )
+            )
+
+            return struct_adm

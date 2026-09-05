@@ -16,3 +16,8 @@ class NodeHasDependentsException(Exception):
 class NodeHasRootStructAdm(Exception):
     def __init__(self):
         super().__init__("Node has root struct.")
+
+
+class StructAdmHasUsers(Exception):
+    def __init__(self):
+        super().__init__("Cannot delete structure with assigned users.")

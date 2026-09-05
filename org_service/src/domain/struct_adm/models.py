@@ -10,13 +10,11 @@ class StructAdmDTO:
     company_id: UUID
     name: str
     path: str | None = None
-    manager_id: UUID | None = None
 
 
 @dataclass(slots=True)
 class UpdateStructAdmDTO:
     name: str
-    manager_id: UUID | None = None
 
 
 @dataclass(slots=True)
@@ -30,7 +28,6 @@ class CreateStructAdmDTO:
     name: str
     id: UUID = field(default_factory=uuid4)
     path: str | None = None
-    manager_id: UUID | None = None
 
 
 @dataclass(slots=True)
@@ -54,7 +51,6 @@ class ManagerDTO(AddManagerStructAdmDTO):
 class CompanyStructureDTO:
     id: UUID
     name: str
-    manager_id: UUID | None = None
     children: list["StructAdmTreeDTO"] = field(default_factory=list)
 
 
@@ -63,5 +59,4 @@ class StructAdmTreeDTO:
     id: UUID
     name: str
     path: str
-    manager_id: UUID | None = None
     children: list["StructAdmTreeDTO"] = field(default_factory=list)

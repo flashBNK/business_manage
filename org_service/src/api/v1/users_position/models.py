@@ -3,6 +3,8 @@ from uuid import UUID
 from infrastructure.databases.postgresql.models.users_position import Role
 from pydantic import BaseModel
 
+from api.v1.structure.models import StructAdmSchema
+
 
 class CreateUsersPositionSchema(BaseModel):
     user_id: UUID
@@ -11,6 +13,7 @@ class CreateUsersPositionSchema(BaseModel):
 
 class UsersPositionSchema(CreateUsersPositionSchema):
     struct_adm_id: UUID
+    role: Role
 
 
 class UsersReplicaSchema(BaseModel):
@@ -29,5 +32,11 @@ class EmployeePositionSchema(BaseModel):
 
 
 class UpdateUsersPositionSchema(BaseModel):
-    struct_adm_id: UUID
-    position_id: UUID
+    struct_adm_id: UUID | None = None
+    position_id: UUID | None = None
+
+
+class UsersPositionListSchema(BaseModel):
+    struct_adm: StructAdmSchema
+    total: int
+    employees: list[EmployeePositionSchema]

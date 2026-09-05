@@ -19,7 +19,6 @@ class PostgreSQLGetManagerStructAdmUseCase(AbstractGetManagerStructAdmUseCase):
             users_position = await uow.users_position.get_manager(
                 dto=GetManagerPositionDTO(
                     struct_adm_id=struct_adm.id,
-                    user_id=struct_adm.manager_id,
                 )
             )
             if not users_position:

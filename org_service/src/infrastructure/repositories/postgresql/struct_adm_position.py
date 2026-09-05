@@ -19,6 +19,18 @@ class PostgreSQLStructAdmPositionRepository(AbstractStructAdmPositionRepository)
 
         return self._to_domain(db_struct_adm_position)
 
+    async def get_by_pair(self, dto: CreateStructAdmPositionDTO) -> StructAdmPositionDTO | None:
+        stmt = (
+            select(StructAdmPositionModel)
+            .where(StructAdmPositionModel.struct_adm_id == dto.struct_adm_id)
+            .where(StructAdmPositionModel.position_id == dto.position_id)
+        )
+        result = await self._session.execute(stmt)
+        struct_adm_position = result.scalar_one_or_none()
+        if not struct_adm_position:
+            return None
+        return self._to_domain(struct_adm_position)
+
     async def delete_by_dto(self, dto: StructAdmPositionDTO) -> None:
         stmt = (
             select(StructAdmPositionModel)
@@ -39,6 +51,16 @@ class PostgreSQLStructAdmPositionRepository(AbstractStructAdmPositionRepository)
 
     async def list_by_struct_adm_id(self, struct_adm_id: UUID) -> list[StructAdmPositionDTO]:
         stmt = select(StructAdmPositionModel).where(StructAdmPositionModel.struct_adm_id == struct_adm_id)
+        result = await self._session.execute(stmt)
+        struct_adm_positions = result.scalars().all()
+
+        if not struct_adm_positions:
+            return []
+
+        return [self._to_domain(struct_adm_position) for struct_adm_position in struct_adm_positions]
+
+    async def list_by_position_id(self, position_id: UUID) -> list[StructAdmPositionDTO]:
+        stmt = select(StructAdmPositionModel).where(StructAdmPositionModel.position_id == position_id)
         result = await self._session.execute(stmt)
         struct_adm_positions = result.scalars().all()
 
