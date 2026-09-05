@@ -29,8 +29,13 @@ from .dependencies import (
     list_users_position_by_struct_adm_use_case,
     update_users_position_by_struct_adm_use_case,
 )
-from .models import CreateUsersPositionSchema, EmployeePositionSchema, UpdateUsersPositionSchema, UsersPositionSchema, \
-    UsersPositionListSchema
+from .models import (
+    CreateUsersPositionSchema,
+    EmployeePositionSchema,
+    UpdateUsersPositionSchema,
+    UsersPositionListSchema,
+    UsersPositionSchema,
+)
 
 router = APIRouter(prefix="/companies")
 

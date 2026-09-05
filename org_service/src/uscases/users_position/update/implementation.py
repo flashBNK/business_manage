@@ -11,9 +11,9 @@ from domain.users_position.models import (
     UsersPositionDTO,
 )
 from infrastructure.repositories.postgresql.uow import PostgreSQLOrgUnitOfWork
+from logger import get_logger
 
 from .abstract import AbstractUpdateUsersPositionUseCase
-from logger import get_logger
 
 log = get_logger(__name__)
 
@@ -70,4 +70,3 @@ class PostgreSQLUpdateUsersPositionUseCase(AbstractUpdateUsersPositionUseCase):
             )
 
             return users_position
-

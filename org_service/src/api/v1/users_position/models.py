@@ -1,9 +1,8 @@
 from uuid import UUID
 
+from api.v1.structure.models import StructAdmSchema
 from infrastructure.databases.postgresql.models.users_position import Role
 from pydantic import BaseModel
-
-from api.v1.structure.models import StructAdmSchema
 
 
 class CreateUsersPositionSchema(BaseModel):

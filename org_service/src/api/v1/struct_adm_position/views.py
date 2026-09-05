@@ -17,7 +17,7 @@ from .dependencies import (
     delete_struct_adm_position_use_case,
     list_struct_adm_position_use_case,
 )
-from .models import StructAdmPositionSchema, StructAdmPositionListSchema
+from .models import StructAdmPositionListSchema, StructAdmPositionSchema
 
 router = APIRouter(prefix="/companies")
 

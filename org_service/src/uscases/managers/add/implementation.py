@@ -33,7 +33,7 @@ class PostgreSQLAddManagerStructAdmUseCase(AbstractAddManagerStructAdmUseCase):
                 )
             )
 
-            manager =  ManagerDTO(
+            manager = ManagerDTO(
                 user_id=users_position.user_id,
                 struct_adm_id=users_position.struct_adm_id,
                 position_id=users_position.position_id,

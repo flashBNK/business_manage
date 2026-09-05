@@ -2,9 +2,7 @@ from uuid import UUID
 
 from domain.struct_adm.exceptions import NodeHasDependentsException, NodeHasRootStructAdm
 from domain.struct_adm.models import (
-    AddManagerStructAdmDTO,
     CreateStructAdmDTO,
-    DeleteManagerStructAdmDTO,
     StructAdmDTO,
     UpdateStructAdmDTO,
 )
@@ -175,7 +173,6 @@ class PostgreSQLStructAdmRepository(AbstractStructAdmRepository):
         )
 
         await self._session.execute(stmt)
-
 
     async def list_tree(self, company_id: UUID) -> list[StructAdmDTO]:
         stmt = select(StructAdmModel).where(StructAdmModel.company_id == company_id).order_by(StructAdmModel.path)

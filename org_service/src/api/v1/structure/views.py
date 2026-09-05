@@ -1,9 +1,11 @@
 from uuid import UUID
 
-from sqlalchemy.exc import IntegrityError
-
-from domain.struct_adm.exceptions import InvalidRequestStructAdm, NodeHasDependentsException, NodeHasRootStructAdm, \
-    StructAdmHasUsers
+from domain.struct_adm.exceptions import (
+    InvalidRequestStructAdm,
+    NodeHasDependentsException,
+    NodeHasRootStructAdm,
+    StructAdmHasUsers,
+)
 from domain.struct_adm.models import (
     CompanyStructureDTO,
     CreateStructAdmDTO,

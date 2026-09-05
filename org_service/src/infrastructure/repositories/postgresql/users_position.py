@@ -101,7 +101,6 @@ class PostgreSQLUsersPositionRepository(AbstractUsersPositionRepository):
 
         return employees
 
-
     async def list_by_position(self, company_id: UUID, position_id: UUID) -> list[EmployeePositionDTO]:
         stmt = (
             select(
@@ -188,7 +187,6 @@ class PostgreSQLUsersPositionRepository(AbstractUsersPositionRepository):
             raise UsersPositionNotFound
 
         return self._to_domain(users_position)
-
 
     async def update_role(self, dto: UpdateRoleUsersPositionDTO) -> UsersPositionDTO:
         if dto.role == Role.MANAGER:

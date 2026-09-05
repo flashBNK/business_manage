@@ -1,8 +1,6 @@
 import uuid
 
-from sqlalchemy.exc import IntegrityError
-
-from domain.outbox_event.models import OutboxEventType, CreateOutboxEventDTO
+from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
 from domain.struct_adm.exceptions import InvalidRequestStructAdm, StructAdmHasUsers
 from infrastructure.repositories.postgresql.uow import PostgreSQLOrgUnitOfWork
 from logger import get_logger
@@ -26,9 +24,8 @@ class PostgreSQLDeleteStructAdmUseCase(AbstractDeleteStructAdmUseCase):
             if struct_adm.company_id != company_id:
                 raise InvalidRequestStructAdm
             users_position = await uow.users_position.list_by_struct_adm(
-                struct_adm_id=struct_adm_id,
-                company_id=company_id,
-                struct_adm_path=struct_adm.path)
+                struct_adm_id=struct_adm_id, company_id=company_id, struct_adm_path=struct_adm.path
+            )
             if users_position:
                 raise StructAdmHasUsers
 

@@ -1,4 +1,4 @@
-from aiokafka import AIOKafkaConsumer, TopicPartition, OffsetAndMetadata
+from aiokafka import AIOKafkaConsumer, OffsetAndMetadata, TopicPartition
 
 
 class KafkaEventConsumer:

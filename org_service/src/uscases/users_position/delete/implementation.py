@@ -1,9 +1,9 @@
 from uuid import UUID, uuid4
 
-from domain.outbox_event.models import OutboxEventType, CreateOutboxEventDTO
+from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
 from domain.position.exceptions import PositionNotFound
 from domain.struct_adm.exceptions import StructAdmNotFound
-from domain.users_position.models import GetUsersPositionDTO, UsersPositionDTO
+from domain.users_position.models import GetUsersPositionDTO
 from domain.users_replica.exceptions import UsersReplicaNotFound
 from infrastructure.repositories.postgresql.uow import PostgreSQLOrgUnitOfWork
 

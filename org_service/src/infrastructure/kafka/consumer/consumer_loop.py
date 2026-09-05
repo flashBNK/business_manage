@@ -1,5 +1,5 @@
 import asyncio
-from json import loads, JSONDecodeError
+from json import JSONDecodeError, loads
 
 from domain.kafka.models import EventEnvelopeDTO
 from infrastructure.databases.postgresql.session_manager import DatabaseSessionManager
@@ -22,7 +22,8 @@ async def run_event_consumer(consumer: KafkaEventConsumer, session_manager: Data
             except asyncio.CancelledError:
                 raise
             except Exception:
-                log.exception("Error processing Kafka message",
+                log.exception(
+                    "Error processing Kafka message",
                     topic=message.topic,
                     partition=message.partition,
                     offset=message.offset,
@@ -39,7 +40,8 @@ async def process_message(consumer: KafkaEventConsumer, session_manager: Databas
         event = EventEnvelopeDTO.from_dict(event_dict)
 
     except (UnicodeDecodeError, JSONDecodeError, KeyError, TypeError, ValueError):
-        log.exception("Failed to parse Kafka event",
+        log.exception(
+            "Failed to parse Kafka event",
             topic=message.topic,
             partition=message.partition,
             offset=message.offset,
@@ -50,8 +52,7 @@ async def process_message(consumer: KafkaEventConsumer, session_manager: Databas
     async with session_manager.session() as session:
         async with build_unit_of_work(session=session) as uow:
             already_processed = await uow.inbox_event.get_by_2_param(
-                inbox_event_id=event.event_id,
-                consumer_name=CONSUMER_NAME
+                inbox_event_id=event.event_id, consumer_name=CONSUMER_NAME
             )
             if already_processed is not None:
                 log.info("Kafka event already processed", event_id=event.event_id, event_type=event.event_type)
@@ -70,10 +71,7 @@ async def process_message(consumer: KafkaEventConsumer, session_manager: Databas
         return
 
     success = await process_event_with_retry(
-        event=event,
-        handler=handler,
-        session_manager=session_manager,
-        consumer_name=CONSUMER_NAME
+        event=event, handler=handler, session_manager=session_manager, consumer_name=CONSUMER_NAME
     )
 
     if success:

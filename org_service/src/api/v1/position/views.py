@@ -3,10 +3,9 @@ from uuid import UUID
 from domain.position.exceptions import InvalidRequestPosition, PositionNotFound
 from domain.position.models import CreatePositionDTO, PositionDTO, UpdatePositionDTO
 from domain.token.models import MemberRoles, TokenDTO
+from domain.users_position.exceptions import UsersPositionIsUsed
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, Response
-
-from domain.users_position.exceptions import UsersPositionIsUsed
 from uscases.position.create.abstract import AbstractCreatePositionUseCase
 from uscases.position.delete.abstract import AbstractDeletePositionUseCase
 from uscases.position.get.abstract import AbstractGetPositionUseCase
@@ -21,7 +20,7 @@ from .dependencies import (
     list_position_use_case,
     update_position_use_case,
 )
-from .models import CreatePositionSchema, PositionSchema, UpdatePositionSchema, PositionListSchema
+from .models import CreatePositionSchema, PositionListSchema, PositionSchema, UpdatePositionSchema
 
 router = APIRouter(prefix="/companies")
 

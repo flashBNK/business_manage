@@ -5,9 +5,7 @@ from domain.abstract import AbstractRepository
 
 from .exceptions import StructAdmNotFound
 from .models import (
-    AddManagerStructAdmDTO,
     CreateStructAdmDTO,
-    DeleteManagerStructAdmDTO,
     StructAdmDTO,
     UpdateStructAdmDTO,
 )
