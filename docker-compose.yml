@@ -5,6 +5,7 @@ networks:
 volumes:
   auth_postgres_data:
   org_postgres_data:
+  tasks_postgres_data:
   kafka-data:
 
 services:
@@ -97,6 +98,52 @@ services:
         condition: service_healthy
     networks:
       - microservices
+
+  tasks_postgres:
+    image: postgres:17-alpine
+    container_name: tasks_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TASKS_DB_USER}
+      POSTGRES_PASSWORD: ${TASKS_DB_PASSWORD}
+      POSTGRES_DB: ${TASKS_DB_NAME}
+    volumes:
+      - tasks_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${TASKS_DB_PORT}:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${TASKS_DB_USER} -d ${TASKS_DB_NAME}" ]
+      interval: 5s
+      retries: 5
+    networks:
+      - microservices
+
+  tasks_service:
+    build:
+      context: .
+      dockerfile: tasks_service/Dockerfile
+    container_name: tasks_service
+    restart: unless-stopped
+    volumes:
+      - ./tasks_service:/app/tasks_service
+    environment:
+      APP_SECRET_KEY: ${TASKS_APP_SECRET_KEY}
+      DB_USER: ${TASKS_DB_USER}
+      DB_PASSWORD: ${TASKS_DB_PASSWORD}
+      DB_HOST: ${TASKS_DB_HOST}
+      DB_PORT: "5432"
+      DB_NAME: ${TASKS_DB_NAME}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    ports:
+      - "${TASKS_SERVICE_PORT}:8000"
+    depends_on:
+      tasks_postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - microservices
+
 
   kafka:
     image: apache/kafka:4.3.1

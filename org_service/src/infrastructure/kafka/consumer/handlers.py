@@ -7,12 +7,12 @@ from domain.users_replica.models import CreateUsersReplicaDTO
 from infrastructure.repositories.postgresql.uow import PostgreSQLOrgUnitOfWork
 from logger import get_logger
 
-log = get_logger("__name__")
+log = get_logger(__name__)
 
 
 async def handle_company_created(event: EventEnvelopeDTO, uow: PostgreSQLOrgUnitOfWork) -> None:
     payload = event.payload
-    company_dto = CreateCompanyReplicaDTO(name=payload["name"], company_id=payload["company_id"])
+    company_dto = CreateCompanyReplicaDTO(name=payload["name"], company_id=UUID(payload["company_id"]))
     await uow.company_replica.upsert(dto=company_dto)
     log.info("company successfully added to the database", company_name=payload["name"])
 
@@ -28,9 +28,9 @@ async def handle_company_created(event: EventEnvelopeDTO, uow: PostgreSQLOrgUnit
 async def handle_employee_upsert(event: EventEnvelopeDTO, uow: PostgreSQLOrgUnitOfWork) -> None:
     payload = event.payload
     dto = CreateUsersReplicaDTO(
-        id=payload["user_id"],
+        id=UUID(payload["user_id"]),
         username=payload["first_name"] + " " + payload["last_name"],
-        company_id=payload["company_id"],
+        company_id=UUID(payload["company_id"]),
         is_active=payload["is_active"],
         last_event_at=event.occurred_at,
     )

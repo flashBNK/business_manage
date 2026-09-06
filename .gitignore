@@ -3,3 +3,4 @@
 .env.auth
 auth_service/config/keys/
 org_service/config/keys/
+tasks_service/config/keys/

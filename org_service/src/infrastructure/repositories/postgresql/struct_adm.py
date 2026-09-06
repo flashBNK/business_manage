@@ -147,10 +147,13 @@ class PostgreSQLStructAdmRepository(AbstractStructAdmRepository):
 
         return [self._to_domain(struct_adm) for struct_adm in result.scalars()]
 
-    async def update(self, struct_adm_id: UUID, dto: UpdateStructAdmDTO) -> StructAdmDTO:
+    async def update(self, struct_adm_id: UUID, dto: UpdateStructAdmDTO) -> StructAdmDTO | None:
         stmt = select(StructAdmModel).where(StructAdmModel.id == struct_adm_id)
         result = await self._session.execute(stmt)
         struct_adm = result.scalar_one_or_none()
+
+        if not struct_adm:
+            return None
 
         if dto.name:
             struct_adm.name = dto.name

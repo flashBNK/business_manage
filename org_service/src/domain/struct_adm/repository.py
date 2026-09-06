@@ -29,7 +29,7 @@ class AbstractStructAdmRepository(AbstractRepository[StructAdmDTO, UUID, CreateS
         raise StructAdmNotFound
 
     @abstractmethod
-    async def update(self, struct_adm_id: UUID, dto: UpdateStructAdmDTO) -> StructAdmDTO:
+    async def update(self, struct_adm_id: UUID, dto: UpdateStructAdmDTO) -> StructAdmDTO | None:
         raise StructAdmNotFound
 
     @abstractmethod

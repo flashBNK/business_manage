@@ -7,7 +7,8 @@ from container import Container
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from infrastructure.kafka.consumer.consumer_loop import run_event_consumer
-from infrastructure.kafka.producer.producer_loop import run_outbox_relay
+
+# from infrastructure.kafka.producer.producer_loop import run_outbox_relay
 from logger import get_logger, setup_logging
 from settings import settings
 
@@ -19,7 +20,7 @@ log = get_logger("app")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     setup_logging(settings.app.debug)
-    log.info("Приложение запущено", host=settings.app.host, port=settings.app.port)
+    log.info("applications up", host=settings.app.host, port=settings.app.port)
 
     sessionmanager = container.session_manager()
     sessionmanager.init(settings.database.get_database_url())
@@ -27,27 +28,26 @@ async def lifespan(app: FastAPI):
     container.wire(
         modules=[
             "infrastructure.databases.postgresql.session",
-            # "api.v1.user.dependencies", # добавить, когда появится @inject
         ]
     )
 
     kafka_consumer = container.kafka_consumer()
-    kafka_producer = container.kafka_producer()
+    # kafka_producer = container.kafka_producer()
     await kafka_consumer.start()
-    await kafka_producer.start()
+    # await kafka_producer.start()
 
     consumer_task = asyncio.create_task(run_event_consumer(consumer=kafka_consumer, session_manager=sessionmanager))
-    relay_task = asyncio.create_task(run_outbox_relay(producer=kafka_producer, session_manager=sessionmanager))
+    # relay_task = asyncio.create_task(run_outbox_relay(producer=kafka_producer, session_manager=sessionmanager))
     try:
         yield
 
     finally:
         consumer_task.cancel()
-        relay_task.cancel()
+        # relay_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await consumer_task
-            await relay_task
-        await kafka_producer.stop()
+            # await relay_task
+        # await kafka_producer.stop()
         await kafka_consumer.stop()
         await sessionmanager.close()
         log.info("applications shutdown")
