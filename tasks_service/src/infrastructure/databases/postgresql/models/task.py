@@ -1,10 +1,18 @@
+import enum
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import UUID, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import UUID, DateTime, ForeignKey, Integer, String, Text, Enum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..base import Base
+
+class TaskStatus(enum.StrEnum):
+    TODO = "todo"
+    IN_PROGRESS = "in_progress"
+    IN_REVIEW = "in_review"
+    DONE = "done"
+    CANCELLED = "cancelled"
 
 
 class Task(Base):
@@ -17,7 +25,14 @@ class Task(Base):
     responsible_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users_replica.id"), nullable=False, index=True)
     company_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
     deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="todo")
+    status: Mapped[TaskStatus] = mapped_column(
+        Enum(
+            TaskStatus,
+            values_callable=lambda x: [e.value for e in x],
+            native_enum=False,
+        ),
+        default=TaskStatus.TODO,
+    )
     estimated_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(

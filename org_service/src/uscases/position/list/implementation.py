@@ -12,4 +12,4 @@ class PostgreSQLListPositionUseCase(AbstractListPositionUseCase):
 
     async def execute(self, company_id: UUID) -> list[PositionDTO]:
         async with self._uow as uow:
-            return await uow.position.list(company_id=company_id)
+            return await uow.position.list_by_company(company_id=company_id)
