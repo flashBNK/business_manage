@@ -1,21 +1,27 @@
 from uuid import UUID
 
-from domain.task.exceptions import ParticipantNotFound, ParticipantInactive, ParticipantWrongCompany, TaskNotFound
-from domain.task.models import CreateTaskDTO, TaskDTO, UpdateTaskDTO, ChangeStatusTaskDTO
+from domain.task.exceptions import ParticipantInactive, ParticipantNotFound, ParticipantWrongCompany, TaskNotFound
+from domain.task.models import ChangeStatusTaskDTO, CreateTaskDTO, TaskDTO, UpdateTaskDTO
 from domain.token.models import MemberRoles, TokenDTO
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, Response
-
 from usecases.task.change_status.abstract import AbstractChangeStatusTaskUseCase
 from usecases.task.create.abstract import AbstractCreateTaskUseCase
 from usecases.task.delete.abstract import AbstractDeleteTaskUseCase
 from usecases.task.get.abstract import AbstractGetTaskUseCase
 from usecases.task.list.abstract import AbstractListTaskUseCase
 from usecases.task.update.abstract import AbstractUpdateTaskUseCase
+
 from ..authorization import require_company_role
-from .dependencies import create_task_use_case, get_task_use_case, list_task_use_case, update_task_use_case, \
-    change_status_task_use_case, delete_task_use_case
-from .models import CreateTaskSchema, TaskSchema, ListTaskSchema, UpdateTaskSchema, ChangeStatusTaskSchema
+from .dependencies import (
+    change_status_task_use_case,
+    create_task_use_case,
+    delete_task_use_case,
+    get_task_use_case,
+    list_task_use_case,
+    update_task_use_case,
+)
+from .models import ChangeStatusTaskSchema, CreateTaskSchema, ListTaskSchema, TaskSchema, UpdateTaskSchema
 
 router = APIRouter(prefix="/companies")
 
@@ -70,7 +76,7 @@ async def get_task(
 
     return JSONResponse(
         _to_schema(task.task, watcher_ids=task.watcher_ids, assignee_ids=task.assignee_ids).model_dump(mode="json"),
-        status_code=status.HTTP_200_OK
+        status_code=status.HTTP_200_OK,
     )
 
 
@@ -85,7 +91,7 @@ async def list_task(
 
     content = ListTaskSchema(
         total=len(tasks),
-        tasks=[_to_schema(task.task, task.watcher_ids, task.assignee_ids).model_dump(mode="json") for task in tasks]
+        tasks=[_to_schema(task.task, task.watcher_ids, task.assignee_ids).model_dump(mode="json") for task in tasks],
     )
 
     return JSONResponse(content.model_dump(mode="json"), status_code=status.HTTP_200_OK)
@@ -119,10 +125,11 @@ async def update_task(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from None
 
     return JSONResponse(
-        _to_schema(dto=task.task, watcher_ids=task.watcher_ids, assignee_ids=task.assignee_ids).model_dump(mode="json"),
-        status_code=status.HTTP_201_CREATED,
+        _to_schema(dto=task.task, watcher_ids=task.watcher_ids, assignee_ids=task.assignee_ids).model_dump(
+            mode="json"
+        ),
+        status_code=status.HTTP_200_OK,
     )
-
 
 
 @router.patch("/{company_id}/tasks/{task_id}/change_status", response_model=TaskSchema)
@@ -143,8 +150,10 @@ async def change_status_task(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
 
     return JSONResponse(
-        _to_schema(dto=task.task, watcher_ids=task.watcher_ids, assignee_ids=task.assignee_ids).model_dump(mode="json"),
-        status_code=status.HTTP_201_CREATED,
+        _to_schema(dto=task.task, watcher_ids=task.watcher_ids, assignee_ids=task.assignee_ids).model_dump(
+            mode="json"
+        ),
+        status_code=status.HTTP_200_OK,
     )
 
 

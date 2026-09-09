@@ -2,22 +2,25 @@ import asyncio
 
 from domain.outbox_event.models import OutboxEventType
 from infrastructure.databases.postgresql.session_manager import DatabaseSessionManager
-from infrastructure.kafka.producer.producer import KafkaEventProducer
 from infrastructure.repositories.postgresql.outbox_event import PostgreSQLOutboxEventRepository
 from logger import get_logger
+
+from .producer import KafkaEventProducer
 
 log = get_logger(__name__)
 
 TOPIC_EVENT_TYPE = {
-    OutboxEventType.STRUCT_ADM_CREATED: "org.struct_adm.events",
-    OutboxEventType.STRUCT_ADM_UPDATED: "org.struct_adm.events",
-    OutboxEventType.STRUCT_ADM_DELETED: "org.struct_adm.events",
-    OutboxEventType.EMPLOYEE_POSITION_CHANGED: "org.employee.events",
-    OutboxEventType.EMPLOYEE_POSITION_DELETED: "org.employee.events",
-    OutboxEventType.POSITION_CREATED: "org.position.events",
-    OutboxEventType.POSITION_UPDATED: "org.position.events",
-    OutboxEventType.POSITION_DELETED: "org.position.events",
+    OutboxEventType.TASK_CREATED: "tasks.task.events",
+    OutboxEventType.TASK_UPDATED: "tasks.task.events",
+    OutboxEventType.TASK_DELETED: "tasks.task.events",
 }
+
+"""
+task.assignee_added
+task.assignee_removed
+task.watcher_added
+task.watcher_removed
+"""
 
 
 async def run_outbox_relay(producer: KafkaEventProducer, session_manager: DatabaseSessionManager) -> None:

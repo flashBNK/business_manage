@@ -4,7 +4,7 @@ from uuid import UUID
 from domain.abstract import AbstractRepository
 
 from .exceptions import TaskNotFound
-from .models import TaskDTO, CreateTaskDTO, UpdateTaskDTO, ChangeStatusTaskDTO
+from .models import ChangeStatusTaskDTO, CreateTaskDTO, TaskDTO, UpdateTaskDTO
 
 
 class AbstractTaskRepository(AbstractRepository[TaskDTO, UUID, CreateTaskDTO], ABC):

@@ -1,6 +1,6 @@
-from uuid import UUID
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+from uuid import UUID
 
 from infrastructure.databases.postgresql.models.task import TaskStatus
 

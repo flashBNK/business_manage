@@ -4,7 +4,7 @@ from uuid import UUID
 from domain.abstract import AbstractRepository
 
 from .exceptions import AssigneesNotFound
-from .models import TaskAssigneesDTO, CreateTaskAssigneesDTO
+from .models import CreateTaskAssigneesDTO, TaskAssigneesDTO
 
 
 class AbstractTaskAssigneesRepository(AbstractRepository[TaskAssigneesDTO, UUID, CreateTaskAssigneesDTO], ABC):
@@ -13,7 +13,7 @@ class AbstractTaskAssigneesRepository(AbstractRepository[TaskAssigneesDTO, UUID,
         raise AssigneesNotFound
 
     @abstractmethod
-    async def delete_by_list(self, assignee_ids: list[UUID], task_id: UUID) -> None:
+    async def delete_by_list(self, assignee_ids: list[UUID]) -> None:
         raise AssigneesNotFound
 
     @abstractmethod

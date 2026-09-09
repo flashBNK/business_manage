@@ -1,4 +1,5 @@
 from infrastructure.repositories.postgresql.inbox_event import PostgreSQLInboxEventRepository
+from infrastructure.repositories.postgresql.outbox_event import PostgreSQLOutboxEventRepository
 from infrastructure.repositories.postgresql.task import PostgreSQLTaskRepository
 from infrastructure.repositories.postgresql.task_assignees import PostgreSQLTaskAssigneesRepository
 from infrastructure.repositories.postgresql.task_watchers import PostgreSQLTaskWatcherRepository
@@ -15,6 +16,7 @@ class PostgreSQLTasksUnitOfWork:
         self.task: PostgreSQLTaskRepository | None = None
         self.task_watcher: PostgreSQLTaskWatcherRepository | None = None
         self.task_assignees: PostgreSQLTaskAssigneesRepository | None = None
+        self.outbox_event: PostgreSQLOutboxEventRepository | None = None
 
     async def __aenter__(self):
         self.users_replica = PostgreSQLUsersReplicaRepository(session=self._session)
@@ -22,6 +24,7 @@ class PostgreSQLTasksUnitOfWork:
         self.task = PostgreSQLTaskRepository(session=self._session)
         self.task_watcher = PostgreSQLTaskWatcherRepository(session=self._session)
         self.task_assignees = PostgreSQLTaskAssigneesRepository(session=self._session)
+        self.outbox_event = PostgreSQLOutboxEventRepository(session=self._session)
 
         return self
 
@@ -36,6 +39,7 @@ class PostgreSQLTasksUnitOfWork:
         self.task = None
         self.task_watcher = None
         self.task_assignees = None
+        self.outbox_event = None
 
     async def commit(self):
         await self._session.commit()

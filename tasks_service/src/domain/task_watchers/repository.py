@@ -4,7 +4,7 @@ from uuid import UUID
 from domain.abstract import AbstractRepository
 
 from .exceptions import WatcherNotFound
-from .models import TaskWatcherDTO, CreateTaskWatcherDTO
+from .models import CreateTaskWatcherDTO, TaskWatcherDTO
 
 
 class AbstractTaskWatcherRepository(AbstractRepository[TaskWatcherDTO, UUID, CreateTaskWatcherDTO], ABC):

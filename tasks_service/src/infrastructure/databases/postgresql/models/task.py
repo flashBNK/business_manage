@@ -2,10 +2,11 @@ import enum
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import UUID, DateTime, ForeignKey, Integer, String, Text, Enum
+from sqlalchemy import UUID, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..base import Base
+
 
 class TaskStatus(enum.StrEnum):
     TODO = "todo"

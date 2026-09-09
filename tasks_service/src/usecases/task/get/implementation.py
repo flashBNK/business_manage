@@ -1,11 +1,12 @@
 from uuid import UUID
 
 from domain.task.exceptions import TaskNotFound
-from domain.task.models import  ResponseTaskDTO
+from domain.task.models import ResponseTaskDTO
 from infrastructure.repositories.postgresql.uow import PostgreSQLTasksUnitOfWork
+from logger import get_logger
 
 from .abstract import AbstractGetTaskUseCase
-from logger import get_logger
+
 log = get_logger(__name__)
 
 

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from domain.task.exceptions import ParticipantInactive, ParticipantWrongCompany, ParticipantNotFound
+from domain.task.exceptions import ParticipantInactive, ParticipantNotFound, ParticipantWrongCompany
 from infrastructure.repositories.postgresql.uow import PostgreSQLTasksUnitOfWork
 
 

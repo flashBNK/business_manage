@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from domain.task.models import UpdateTaskDTO, ResponseTaskDTO, ChangeStatusTaskDTO
-
 
 class AbstractDeleteTaskUseCase(ABC):
     @abstractmethod

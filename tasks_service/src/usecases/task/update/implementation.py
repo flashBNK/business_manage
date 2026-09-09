@@ -1,13 +1,15 @@
 # from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
-from uuid import UUID
+from uuid import UUID, uuid4
 
+from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
 from domain.task.exceptions import TaskNotFound
-from domain.task.models import UpdateTaskDTO, ResponseTaskDTO
+from domain.task.models import ResponseTaskDTO, UpdateTaskDTO
 from domain.task.participants import check_participant
 from infrastructure.repositories.postgresql.uow import PostgreSQLTasksUnitOfWork
+from logger import get_logger
 
 from .abstract import AbstractUpdateTaskUseCase
-from logger import get_logger
+
 log = get_logger(__name__)
 
 
@@ -16,6 +18,7 @@ class PostgreSQLUpdateTaskUseCase(AbstractUpdateTaskUseCase):
         self._uow = uow
 
     async def execute(self, dto: UpdateTaskDTO, company_id: UUID, task_id: UUID) -> ResponseTaskDTO:
+        correlation_id = uuid4()
         async with self._uow as uow:
             task = await uow.task.get(task_id=task_id)
             if not task or task.company_id != company_id:
@@ -45,9 +48,7 @@ class PostgreSQLUpdateTaskUseCase(AbstractUpdateTaskUseCase):
                     await uow.task_watcher.delete_by_list(watcher_ids=list(remove_watcher_ids))
 
                 if create_watcher_ids:
-                    await uow.task_watcher.create_many(
-                        watcher_ids=list(create_watcher_ids), task_id=task.id
-                    )
+                    await uow.task_watcher.create_many(watcher_ids=list(create_watcher_ids), task_id=task.id)
 
             if dto.assignee_ids is not None:
                 old_assignees = await uow.task_assignees.list_by_task(task_id=task.id)
@@ -60,9 +61,7 @@ class PostgreSQLUpdateTaskUseCase(AbstractUpdateTaskUseCase):
                     await uow.task_assignees.delete_by_list(assignee_ids=list(remove_assignee_ids))
 
                 if create_assignee_ids:
-                    await uow.task_assignees.create_many(
-                        assignee_ids=list(create_assignee_ids), task_id=task.id
-                    )
+                    await uow.task_assignees.create_many(assignee_ids=list(create_assignee_ids), task_id=task.id)
 
             assignees = await uow.task_assignees.list_by_task(task_id=task.id)
             watchers = await uow.task_watcher.list_by_task(task_id=task.id)
@@ -70,6 +69,26 @@ class PostgreSQLUpdateTaskUseCase(AbstractUpdateTaskUseCase):
                 task=task,
                 assignee_ids=[assignee.user_id for assignee in assignees] if assignees else [],
                 watcher_ids=[watcher.user_id for watcher in watchers] if watchers else [],
+            )
+
+            await uow.outbox_event.create(
+                CreateOutboxEventDTO(
+                    event_type=OutboxEventType.TASK_UPDATED,
+                    aggregate_id=task.id,
+                    correlation_id=correlation_id,
+                    payload={
+                        "title": task.title,
+                        "description": task.description,
+                        "author_id": str(task.author_id),
+                        "responsible_id": str(task.responsible_id),
+                        "company_id": str(task.company_id),
+                        "deadline": task.deadline.isoformat() if task.deadline else None,
+                        "status": task.status,
+                        "estimated_minutes": task.estimated_minutes,
+                        "assignee_ids": [str(assignee.user_id) for assignee in assignees],
+                        "watcher_ids": [str(watcher.user_id) for watcher in watchers],
+                    },
+                )
             )
 
             return response

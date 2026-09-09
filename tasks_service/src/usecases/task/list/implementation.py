@@ -2,9 +2,10 @@ from uuid import UUID
 
 from domain.task.models import ResponseTaskDTO
 from infrastructure.repositories.postgresql.uow import PostgreSQLTasksUnitOfWork
+from logger import get_logger
 
 from .abstract import AbstractListTaskUseCase
-from logger import get_logger
+
 log = get_logger(__name__)
 
 
@@ -22,7 +23,9 @@ class PostgreSQLListTaskUseCase(AbstractListTaskUseCase):
                 response = ResponseTaskDTO(
                     task=task,
                     watcher_ids=[watcher.user_id for watcher in await uow.task_watcher.list_by_task(task_id=task.id)],
-                    assignee_ids=[assignee.user_id for assignee in await uow.task_assignees.list_by_task(task_id=task.id)]
+                    assignee_ids=[
+                        assignee.user_id for assignee in await uow.task_assignees.list_by_task(task_id=task.id)
+                    ],
                 )
                 total.append(response)
 
