@@ -9,6 +9,8 @@ class CreateEmployeeSchema(BaseModel):
     first_name: str
     last_name: str
     role: MemberRoles
+    struct_adm_id: uuid.UUID
+    position_id: uuid.UUID
 
 
 class CreateEmployeeResultSchema(BaseModel):

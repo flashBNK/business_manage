@@ -36,11 +36,14 @@ class PostgreSQLMemberRepository(AbstractMemberRepository):
         return [self._to_domain(member) for member in members]
 
     async def get_by_invite_id(self, invite_id: uuid.UUID) -> MemberDTO | None:
-        stmt = select(MemberModel).where((MemberModel.invite_id == invite_id), MemberModel.is_active.is_(False))
+        stmt = select(MemberModel).where(MemberModel.invite_id == invite_id)
         result = await self._session.execute(stmt)
         member = result.scalar_one_or_none()
 
-        return member
+        if not member:
+            return None
+
+        return self._to_domain(member)
 
     async def activation_shift(self, member_id: uuid.UUID, flag: bool) -> MemberDTO | None:
         stmt = select(MemberModel).where(MemberModel.id == member_id)

@@ -40,6 +40,8 @@ async def create_employee(
         last_name=payload.last_name,
         company_id=company_id,
         role=payload.role,
+        struct_adm_id=payload.struct_adm_id,
+        position_id=payload.position_id,
     )
 
     try:

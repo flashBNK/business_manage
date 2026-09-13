@@ -23,7 +23,7 @@ class Container(DeclarativeContainer):
         KafkaEventConsumer,
         bootstrap_servers=settings.kafka.bootstrap_servers,
         group_id="tasks_service",
-        topics=["auth.employee.events"],
+        topics=["auth.employee.events", "registration.tasks.commands"],
     )
 
     kafka_producer = Singleton(

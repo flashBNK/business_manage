@@ -29,6 +29,8 @@ class CreateEmployeeDTO:
     first_name: str
     last_name: str
     company_id: uuid.UUID
+    struct_adm_id: uuid.UUID
+    position_id: uuid.UUID
     role: MemberRoles = MemberRoles.MEMBER
 
 

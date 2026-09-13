@@ -17,6 +17,9 @@ TOPIC_EVENT_TYPE = {
     OutboxEventType.POSITION_CREATED: "org.position.events",
     OutboxEventType.POSITION_UPDATED: "org.position.events",
     OutboxEventType.POSITION_DELETED: "org.position.events",
+    OutboxEventType.REGISTRATION_ORG_COMPLETED: "registration.saga.events",
+    OutboxEventType.REGISTRATION_ORG_FAILED: "registration.saga.events",
+    OutboxEventType.REGISTRATION_ORG_COMPENSATED: "registration.saga.events",
 }
 
 

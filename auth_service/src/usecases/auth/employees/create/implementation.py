@@ -37,6 +37,8 @@ class PostgreSQLCreateEmployeeUseCase(AbstractCreateEmployeeUseCase):
                 code=secrets.token_urlsafe(32),
                 user_id=user.id,
                 expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=30),
+                struct_adm_id=dto.struct_adm_id,
+                position_id=dto.position_id,
             )
             invite = await uow.invite.create(invite)
 

@@ -19,9 +19,10 @@ class PostgreSQLChangeStatusTaskUseCase(AbstractChangeStatusTaskUseCase):
         correlation_id = uuid4()
         async with self._uow as uow:
             task = await uow.task.get(task_id=task_id)
-            old_status = task.status
             if not task or task.company_id != company_id:
                 raise TaskNotFound
+
+            old_status = task.status
 
             task = await uow.task.change_status(dto=dto, task_id=task_id)
 

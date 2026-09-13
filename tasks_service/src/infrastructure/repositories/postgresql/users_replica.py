@@ -60,7 +60,15 @@ class PostgreSQLUsersReplicaRepository(AbstractUsersReplicaRepository):
         return self._to_domain(user_replica)
 
     async def delete(self, users_replica_id: UUID) -> None:
-        pass
+        stmt = select(UsersReplicaModel).where(UsersReplicaModel.id == users_replica_id)
+        result = await self._session.execute(stmt)
+        user_replica = result.scalar_one_or_none()
+
+        if user_replica is None:
+            return
+
+        await self._session.delete(user_replica)
+        await self._session.flush()
 
     async def get(self, users_replica_id: UUID) -> UsersReplicaDTO | None:
         stmt = select(UsersReplicaModel).where(UsersReplicaModel.id == users_replica_id)

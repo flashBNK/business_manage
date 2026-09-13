@@ -8,7 +8,7 @@ class EventType(enum.StrEnum):
     COMPANY_CREATED = "company.created"
     EMPLOYEE_CREATED = "employee.created"
     EMPLOYEE_REGISTERED = "employee.registered"
-    EMPLOYEE_EMAIL_CHANGED = "employee.email_changed"
+    EMPLOYEE_REGISTRATION_FAILED = "employee.registration.failed"
 
 
 @dataclass

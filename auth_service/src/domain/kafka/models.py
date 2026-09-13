@@ -1,14 +1,13 @@
 import enum
-import uuid
 from dataclasses import dataclass
 from datetime import datetime
+from uuid import UUID
 
 
-class OutboxEventType(enum.StrEnum):
+class EventType(enum.StrEnum):
     COMPANY_CREATED = "company.created"
     EMPLOYEE_CREATED = "employee.created"
     EMPLOYEE_REGISTERED = "employee.registered"
-    EMPLOYEE_REGISTRATION_FAILED = "employee.registration.failed"
 
     REGISTRATION_ORG_PROVISION = "registration.org.provision"
     REGISTRATION_ORG_COMPLETED = "registration.org.completed"
@@ -24,26 +23,28 @@ class OutboxEventType(enum.StrEnum):
     REGISTRATION_FAILED = "registration.failed"
 
 
-@dataclass(slots=True)
-class OutboxEventDTO:
-    event_id: uuid.UUID
-    event_type: OutboxEventType
-    aggregate_id: uuid.UUID
-    correlation_id: uuid.UUID
-    causation_id: uuid.UUID | None
-    payload: dict
+@dataclass
+class EventEnvelopeDTO:
+    event_id: UUID
+    event_type: str
     schema_version: int
-    dedup_key: str
+    aggregate_id: UUID
+    correlation_id: UUID
+    causation_id: UUID | None
     producer: str
     occurred_at: datetime
-    published_at: datetime | None
-
-
-@dataclass(slots=True)
-class CreateOutboxEventDTO:
-    event_type: OutboxEventType
     payload: dict
-    aggregate_id: uuid.UUID
-    correlation_id: uuid.UUID | None = None
-    causation_id: uuid.UUID | None = None
-    schema_version: int = 1
+
+    @staticmethod
+    def from_dict(data: dict) -> "EventEnvelopeDTO":
+        return EventEnvelopeDTO(
+            event_id=UUID(data["event_id"]),
+            event_type=data["event_type"],
+            schema_version=data["schema_version"],
+            aggregate_id=UUID(data["aggregate_id"]),
+            correlation_id=UUID(data["correlation_id"]),
+            causation_id=UUID(data["causation_id"]) if data["causation_id"] else None,
+            producer=data["producer"],
+            occurred_at=datetime.fromisoformat(data["occurred_at"]),
+            payload=data["payload"],
+        )

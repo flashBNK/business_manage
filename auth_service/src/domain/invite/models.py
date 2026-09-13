@@ -16,12 +16,16 @@ class InviteDTO:
     accepted_at: datetime | None
     user_id: uuid.UUID | None = None
     account_id: uuid.UUID | None = None
+    struct_adm_id: uuid.UUID | None = None
+    position_id: uuid.UUID | None = None
 
 
 @dataclass(slots=True)
 class CreateInviteDTO:
     email: str
     code: str
+    struct_adm_id: uuid.UUID | None = None
+    position_id: uuid.UUID | None = None
     user_id: uuid.UUID | None = None
     account_id: uuid.UUID | None = None
     expires_at: datetime | None = None
@@ -32,6 +36,7 @@ class UpdateInviteDTO:
     attempts: int | None = None
     status: InviteStatus | None = None
     accepted_at: datetime | None = None
+    account_id: uuid.UUID | None = None
 
 
 @dataclass(slots=True)

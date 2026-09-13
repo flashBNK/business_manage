@@ -2,10 +2,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .account.account import PostgreSQLAccountRepository
 from .company.company import PostgreSQLCompanyRepository
+from .inbox_event.inbox_event import PostgreSQLInboxEventRepository
 from .invite.invite import PostgreSQLInviteRepository
 from .member.member import PostgreSQLMemberRepository
 from .outbox_event.outbox_event import PostgreSQLOutboxEventRepository
 from .refresh_token.refresh_token import PostgreSQLRefreshTokenRepository
+from .registration_saga.registration_saga import PostgreSQLRegistrationSagaRepository
 from .secret.secret import PostgreSQLSecretRepository
 from .user.user import PostgreSQLUserRepository
 
@@ -22,6 +24,8 @@ class PostgreSQLAuthUnitOfWork:
         self.user: PostgreSQLUserRepository | None = None
         self.refresh_token: PostgreSQLRefreshTokenRepository | None = None
         self.outbox_event: PostgreSQLOutboxEventRepository | None = None
+        self.registration_saga: PostgreSQLRegistrationSagaRepository | None = None
+        self.inbox_event: PostgreSQLInboxEventRepository
 
     async def __aenter__(self):
         self.account = PostgreSQLAccountRepository(self._session)
@@ -32,6 +36,8 @@ class PostgreSQLAuthUnitOfWork:
         self.user = PostgreSQLUserRepository(self._session)
         self.refresh_token = PostgreSQLRefreshTokenRepository(self._session)
         self.outbox_event = PostgreSQLOutboxEventRepository(self._session)
+        self.registration_saga = PostgreSQLRegistrationSagaRepository(self._session)
+        self.inbox_event = PostgreSQLInboxEventRepository(self._session)
         return self
 
     async def __aexit__(self, exc_type: Exception | None, exc_val, traceback):
@@ -48,6 +54,8 @@ class PostgreSQLAuthUnitOfWork:
         self.user = None
         self.refresh_token = None
         self.outbox_event = None
+        self.registration_saga = None
+        self.inbox_event = None
 
     async def commit(self):
         await self._session.commit()

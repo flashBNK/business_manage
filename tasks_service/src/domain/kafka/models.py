@@ -7,6 +7,7 @@ from uuid import UUID
 class EventType(enum.StrEnum):
     EMPLOYEE_CREATED = "employee.created"
     EMPLOYEE_REGISTERED = "employee.registered"
+    EMPLOYEE_REGISTRATION_FAILED = "employee.registration.failed"
 
 
 @dataclass

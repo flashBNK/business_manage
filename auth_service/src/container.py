@@ -1,7 +1,8 @@
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Factory, Singleton
 from infrastructure.databases.postgresql.session_manager import DatabaseSessionManager
-from infrastructure.kafka.producer import KafkaEventProducer
+from infrastructure.kafka.consumer.consumer import KafkaEventConsumer
+from infrastructure.kafka.producer.producer import KafkaEventProducer
 from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 from infrastructure.security.jwt_service import JVTTokenService
 from settings import settings
@@ -23,4 +24,11 @@ class Container(DeclarativeContainer):
     kafka_producer = Singleton(
         KafkaEventProducer,
         bootstrap_servers=settings.kafka.bootstrap_servers,
+    )
+
+    kafka_consumer = Singleton(
+        KafkaEventConsumer,
+        bootstrap_servers=settings.kafka.bootstrap_servers,
+        group_id="auth_service",
+        topics=["auth.employee.events", "registration.saga.events"],
     )

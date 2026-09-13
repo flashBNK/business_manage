@@ -41,11 +41,13 @@ class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseC
             )
 
             member = await uow.member.get_by_invite_id(invite_id=invite.id)
-            if not member:
+            if not member or member.is_active:
                 raise MemberAlreadyActivated
             member = await uow.member.activation_shift(member_id=member.id, flag=True)
 
-            invite = await uow.invite.update(invite_id=invite.id, dto=UpdateInviteDTO(status=InviteStatus.ACCEPTED))
+            invite = await uow.invite.update(
+                invite_id=invite.id, dto=UpdateInviteDTO(status=InviteStatus.ACCEPTED, account_id=account.id)
+            )
             user = await uow.user.get(user_id=invite.user_id)
 
             await uow.outbox_event.create(
@@ -61,6 +63,9 @@ class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseC
                         "email": invite.email,
                         "role": member.role.value,
                         "is_active": member.is_active,
+                        "invite_id": str(invite.id),
+                        "struct_adm_id": str(invite.struct_adm_id),
+                        "position_id": str(invite.position_id),
                     },
                 )
             )

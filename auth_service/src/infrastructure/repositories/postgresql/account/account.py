@@ -1,4 +1,5 @@
 import datetime
+from uuid import UUID
 
 from domain.account.models import AccountDTO, CreateAccountDTO, UpdateAccountDTO
 from domain.account.repository import AbstractAccountRepository
@@ -34,7 +35,7 @@ class PostgreSQLAccountRepository(AbstractAccountRepository):
 
         return self._to_domain(account)
 
-    async def list_by_user_id(self, user_id: int) -> tuple[list[AccountDTO], int]:
+    async def list_by_user_id(self, user_id: UUID) -> tuple[list[AccountDTO], int]:
         count_stmt = select(func.count()).where(SecretModel.user_id == user_id)
         total = (await self._session.execute(count_stmt)).scalar()
 
@@ -51,10 +52,19 @@ class PostgreSQLAccountRepository(AbstractAccountRepository):
 
         return [self._to_domain(account) for account in accounts], total
 
-    async def delete(self, account_id: int) -> None:
-        pass
+    async def delete(self, account_id: UUID) -> None:
+        stmt = select(AccountModel).where(AccountModel.id == account_id)
 
-    async def get(self, account_id: int) -> AccountDTO | None:
+        result = await self._session.execute(stmt)
+        account = result.scalar_one_or_none()
+
+        if account is None:
+            return
+
+        await self._session.delete(account)
+        await self._session.flush()
+
+    async def get(self, account_id: UUID) -> AccountDTO | None:
         stmt = select(AccountModel).where(AccountModel.id == account_id)
         result = await self._session.execute(stmt)
         account = result.scalar_one_or_none()
@@ -64,7 +74,7 @@ class PostgreSQLAccountRepository(AbstractAccountRepository):
 
         return self._to_domain(account)
 
-    async def update(self, dto: UpdateAccountDTO, account_id: int) -> AccountDTO | None:
+    async def update(self, dto: UpdateAccountDTO, account_id: UUID) -> AccountDTO | None:
         stmt = select(AccountModel).where(AccountModel.id == account_id)
         result = await self._session.execute(stmt)
         account = result.scalar_one_or_none()

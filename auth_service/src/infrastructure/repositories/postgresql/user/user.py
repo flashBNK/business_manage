@@ -47,7 +47,16 @@ class PostgreSQLUserRepository(AbstractUserRepository):
         return self._to_domain(user)
 
     async def delete(self, user_id: uuid.UUID) -> None:
-        pass
+        stmt = select(UserModel).where(UserModel.id == user_id)
+
+        result = await self._session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if user is None:
+            return
+
+        await self._session.delete(user)
+        await self._session.flush()
 
     @staticmethod
     def _to_domain(user: UserModel) -> UserDTO:

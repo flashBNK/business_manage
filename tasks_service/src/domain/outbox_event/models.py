@@ -9,6 +9,8 @@ class OutboxEventType(enum.StrEnum):
     TASK_UPDATED = "task.updated"
     TASK_DELETED = "task.deleted"
     TASK_STATUS_CHANGED = "task.status_changed"
+    REGISTRATION_TASKS_COMPLETED = "registration.tasks.completed"
+    REGISTRATION_TASKS_FAILED = "registration.tasks.failed"
 
 
 @dataclass(slots=True)

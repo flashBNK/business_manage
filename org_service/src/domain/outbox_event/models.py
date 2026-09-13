@@ -14,6 +14,10 @@ class OutboxEventType(enum.StrEnum):
     POSITION_UPDATED = "position.updated"
     POSITION_DELETED = "position.deleted"
 
+    REGISTRATION_ORG_COMPLETED = "registration.org.completed"
+    REGISTRATION_ORG_FAILED = "registration.org.failed"
+    REGISTRATION_ORG_COMPENSATED = "registration.org.compensated"
+
 
 @dataclass(slots=True)
 class OutboxEventDTO:

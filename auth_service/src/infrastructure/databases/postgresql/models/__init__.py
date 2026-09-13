@@ -1,10 +1,12 @@
 from .account import Account
 from .company import Company
 from .credentials import Credentials
+from .inbox_event import InboxEvent
 from .invite import Invite
 from .members import Members
 from .outbox_event import OutboxEvent
 from .refresh_token import RefreshToken
+from .registration_saga import RegistrationSaga
 from .secret import Secret
 from .user import User
 
@@ -18,4 +20,6 @@ __all__ = [
     "Secret",
     "User",
     "OutboxEvent",
+    "RegistrationSaga",
+    "InboxEvent",
 ]

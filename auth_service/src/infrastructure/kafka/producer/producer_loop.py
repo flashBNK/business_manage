@@ -2,7 +2,7 @@ import asyncio
 
 from domain.outbox_event.models import OutboxEventType
 from infrastructure.databases.postgresql.session_manager import DatabaseSessionManager
-from infrastructure.kafka.producer import KafkaEventProducer
+from infrastructure.kafka.producer.producer import KafkaEventProducer
 from infrastructure.repositories.postgresql.outbox_event.outbox_event import PostgreSQLOutboxEventRepository
 from logger import get_logger
 
@@ -12,7 +12,17 @@ TOPIC_EVENT_TYPE = {
     OutboxEventType.COMPANY_CREATED: "auth.company.events",
     OutboxEventType.EMPLOYEE_CREATED: "auth.employee.events",
     OutboxEventType.EMPLOYEE_REGISTERED: "auth.employee.events",
-    OutboxEventType.EMPLOYEE_EMAIL_CHANGED: "auth.employee.events",
+    OutboxEventType.EMPLOYEE_REGISTRATION_FAILED: "auth.employee.events",
+    OutboxEventType.REGISTRATION_ORG_PROVISION: "registration.org.commands",
+    OutboxEventType.REGISTRATION_ORG_COMPENSATE: "registration.org.commands",
+    OutboxEventType.REGISTRATION_TASKS_PROVISION: "registration.tasks.commands",
+    OutboxEventType.REGISTRATION_ORG_COMPLETED: "registration.saga.events",
+    OutboxEventType.REGISTRATION_ORG_FAILED: "registration.saga.events",
+    OutboxEventType.REGISTRATION_ORG_COMPENSATED: "registration.saga.events",
+    OutboxEventType.REGISTRATION_TASKS_COMPLETED: "registration.saga.events",
+    OutboxEventType.REGISTRATION_TASKS_FAILED: "registration.saga.events",
+    OutboxEventType.REGISTRATION_COMPLETED: "registration.saga.events",
+    OutboxEventType.REGISTRATION_FAILED: "registration.saga.events",
 }
 
 

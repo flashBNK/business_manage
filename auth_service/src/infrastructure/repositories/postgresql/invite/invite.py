@@ -28,6 +28,8 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
             expires_at=dto.expires_at,
             user_id=dto.user_id,
             account_id=dto.account_id,
+            struct_adm_id=dto.struct_adm_id,
+            position_id=dto.position_id,
         )
 
         self._session.add(db_invite)
@@ -58,6 +60,8 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
             invite.status = dto.status
             if dto.status == "accepted":
                 invite.accepted_at = datetime.datetime.now(datetime.UTC)
+        if dto.account_id is not None:
+            invite.account_id = dto.account_id
 
         await self._session.flush()
 
@@ -91,8 +95,15 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
 
         return self._to_domain(invite)
 
-    async def get(self, invite_id: uuid.UUID) -> InviteDTO:
-        pass
+    async def get(self, invite_id: uuid.UUID) -> InviteDTO | None:
+        stmt = select(InviteModel).where(InviteModel.id == invite_id)
+        result = await self._session.execute(stmt)
+        invite = result.scalar_one_or_none()
+
+        if invite is None:
+            return None
+
+        return self._to_domain(invite)
 
     @staticmethod
     def _to_domain(invite: InviteModel) -> InviteDTO:
@@ -106,4 +117,6 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
             accepted_at=invite.accepted_at,
             user_id=invite.user_id,
             account_id=invite.account_id,
+            position_id=invite.position_id,
+            struct_adm_id=invite.struct_adm_id,
         )
