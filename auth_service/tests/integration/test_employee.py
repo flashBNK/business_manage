@@ -1,8 +1,6 @@
 import uuid
 
 import pytest
-from sqlalchemy import select
-
 from infrastructure.databases.postgresql.models.account import Account
 from infrastructure.databases.postgresql.models.invite import Invite, InviteStatus
 from infrastructure.databases.postgresql.models.members import MemberRoles, Members
@@ -10,6 +8,7 @@ from infrastructure.databases.postgresql.models.outbox_event import OutboxEvent
 from infrastructure.databases.postgresql.models.refresh_token import RefreshToken
 from infrastructure.databases.postgresql.models.secret import Secret
 from infrastructure.databases.postgresql.models.user import User
+from sqlalchemy import select
 
 from .test_registration import register_user
 
@@ -45,9 +44,10 @@ async def test_employee_invitation_and_registration_flow(client, session):
             "last_name": "User",
             "role": MemberRoles.MEMBER.value,
             "struct_adm_id": str(struct_adm_id),
-            "position_id": str(position_id)
+            "position_id": str(position_id),
         },
-        headers={"Authorization": f"Bearer {admin['access_token']}"})
+        headers={"Authorization": f"Bearer {admin['access_token']}"},
+    )
 
     assert create_employee_response.status_code == 201
 
@@ -81,8 +81,10 @@ async def test_employee_invitation_and_registration_flow(client, session):
 
     employee_created_event = (
         await session.execute(
-            select(OutboxEvent)
-            .where(OutboxEvent.event_type == "employee.created", OutboxEvent.aggregate_id == employee_user_id))
+            select(OutboxEvent).where(
+                OutboxEvent.event_type == "employee.created", OutboxEvent.aggregate_id == employee_user_id
+            )
+        )
     ).scalar_one()
 
     assert employee_created_event.producer == "auth_service"
@@ -95,8 +97,7 @@ async def test_employee_invitation_and_registration_flow(client, session):
     assert employee_created_event.payload["is_active"] is False
 
     complete_response = await client.post(
-        "/api/v1/employees/invite-complete",
-        json={"invite_token": employee_invite_code, "password": employee_password}
+        "/api/v1/employees/invite-complete", json={"invite_token": employee_invite_code, "password": employee_password}
     )
 
     assert complete_response.status_code == 201
@@ -131,20 +132,16 @@ async def test_employee_invitation_and_registration_flow(client, session):
     assert secret.password_hash
 
     refresh_token_count = (
-        await session.execute(
-            select(RefreshToken)
-            .where(RefreshToken.user_id == employee_user_id))
-    ).scalars().all()
+        (await session.execute(select(RefreshToken).where(RefreshToken.user_id == employee_user_id))).scalars().all()
+    )
 
     assert len(refresh_token_count) == 1
     assert refresh_token_count[0].revoked_at is None
 
     employee_registered_event = (
         await session.execute(
-            select(OutboxEvent)
-            .where(
-                OutboxEvent.event_type == "employee.registered",
-                OutboxEvent.aggregate_id == employee_user_id
+            select(OutboxEvent).where(
+                OutboxEvent.event_type == "employee.registered", OutboxEvent.aggregate_id == employee_user_id
             )
         )
     ).scalar_one()
@@ -173,12 +170,12 @@ async def test_employee_invitation_and_registration_flow(client, session):
     assert me_data["memberships"][0]["role"] == MemberRoles.MEMBER.value
 
     reuse_response = await client.post(
-        "/api/v1/employees/invite-complete",
-        json={"invite_token": employee_invite_code, "password": employee_password})
+        "/api/v1/employees/invite-complete", json={"invite_token": employee_invite_code, "password": employee_password}
+    )
 
     assert reuse_response.status_code == 409
 
-    refresh_response = await client.post( "/api/v1/refresh", json={"refresh_token": employee_refresh_token})
+    refresh_response = await client.post("/api/v1/refresh", json={"refresh_token": employee_refresh_token})
 
     assert refresh_response.status_code == 200
 

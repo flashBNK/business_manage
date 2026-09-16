@@ -61,7 +61,7 @@ class PostgreSQLUpdateTaskUseCase(AbstractUpdateTaskUseCase):
                     await uow.task_assignees.delete_by_list(assignee_ids=list(remove_assignee_ids))
 
                 if create_assignee_ids:
-                    await uow.task_assignees.create_many(assignee_ids=list(create_assignee_ids), task_id=task.id)
+                    await uow.task_assignees.create_many(watcher_ids=list(create_assignee_ids), task_id=task.id)
 
             assignees = await uow.task_assignees.list_by_task(task_id=task.id)
             watchers = await uow.task_watcher.list_by_task(task_id=task.id)

@@ -13,6 +13,7 @@ TOPIC_EVENT_TYPE = {
     OutboxEventType.TASK_CREATED: "tasks.task.events",
     OutboxEventType.TASK_UPDATED: "tasks.task.events",
     OutboxEventType.TASK_DELETED: "tasks.task.events",
+    OutboxEventType.TASK_STATUS_CHANGED: "tasks.task.events",
     OutboxEventType.REGISTRATION_TASKS_COMPLETED: "registration.saga.events",
     OutboxEventType.REGISTRATION_TASKS_FAILED: "registration.saga.events",
 }

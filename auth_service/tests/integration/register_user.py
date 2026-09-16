@@ -1,14 +1,12 @@
-import pytest
 from httpx import AsyncClient
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from infrastructure.databases.postgresql.models.account import Account
 from infrastructure.databases.postgresql.models.company import Company
 from infrastructure.databases.postgresql.models.invite import Invite
 from infrastructure.databases.postgresql.models.members import Members
 from infrastructure.databases.postgresql.models.secret import Secret
 from infrastructure.databases.postgresql.models.user import User
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def register_user(
@@ -31,9 +29,7 @@ async def register_user(
     assert len(invite.code) == 6
     assert invite.code.isdigit()
 
-    confirm_response = await client.post(
-        "/api/v1/sign-up",
-        json={"email": email, "code": invite.code})
+    confirm_response = await client.post("/api/v1/sign-up", json={"email": email, "code": invite.code})
 
     assert confirm_response.status_code == 201
 
@@ -62,9 +58,7 @@ async def register_user(
 
     user = (
         await session.execute(
-            select(User)
-            .join(Secret, Secret.user_id == User.id)
-            .where(Secret.account_id == account.id)
+            select(User).join(Secret, Secret.user_id == User.id).where(Secret.account_id == account.id)
         )
     ).scalar_one()
 
@@ -75,10 +69,7 @@ async def register_user(
         company = (await session.execute(select(Company).where(Company.name == company_name))).scalar_one()
 
         member = (
-            await session.execute(
-                select(Members)
-                .where(Members.user_id == user.id,Members.company_id == company.id)
-            )
+            await session.execute(select(Members).where(Members.user_id == user.id, Members.company_id == company.id))
         ).scalar_one()
 
     return {

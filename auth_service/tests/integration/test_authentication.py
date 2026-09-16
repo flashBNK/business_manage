@@ -1,10 +1,9 @@
 from datetime import UTC, datetime
 
 import pytest
-from sqlalchemy import select
-
 from infrastructure.databases.postgresql.models.refresh_token import RefreshToken
 from infrastructure.security.hash_token import hash_token
+from sqlalchemy import select
 
 from .test_registration import register_user
 
@@ -28,7 +27,9 @@ async def test_login_refresh_logout_flow(client, session):
     access_token = login_data["access_token"]
     refresh_token = login_data["refresh_token"]
 
-    wrong_password_response = await client.post("/api/v1/login", json={"email": email, "password": "WrongPassword321!"})
+    wrong_password_response = await client.post(
+        "/api/v1/login", json={"email": email, "password": "WrongPassword321!"}
+    )
 
     assert wrong_password_response.status_code == 401
     assert wrong_password_response.json()["detail"] == "Invalid email or password"
@@ -59,17 +60,13 @@ async def test_login_refresh_logout_flow(client, session):
     assert new_refresh_token != refresh_token
 
     old_refresh_row = (
-        await session.execute(
-            select(RefreshToken)
-            .where(RefreshToken.token_hash == hash_token(refresh_token)))
+        await session.execute(select(RefreshToken).where(RefreshToken.token_hash == hash_token(refresh_token)))
     ).scalar_one()
 
     assert old_refresh_row.revoked_at is not None
 
     new_refresh_row = (
-        await session.execute(
-            select(RefreshToken)
-            .where(RefreshToken.token_hash == hash_token(new_refresh_token)))
+        await session.execute(select(RefreshToken).where(RefreshToken.token_hash == hash_token(new_refresh_token)))
     ).scalar_one()
 
     assert new_refresh_row.user_id == registered["user_id"]
@@ -99,9 +96,7 @@ async def test_login_refresh_logout_flow(client, session):
     assert after_logout_response.json()["detail"] == "Invalid refresh token"
 
     final_token_row = (
-        await session.execute(
-            select(RefreshToken)
-            .where(RefreshToken.token_hash == hash_token(new_refresh_token)))
+        await session.execute(select(RefreshToken).where(RefreshToken.token_hash == hash_token(new_refresh_token)))
     ).scalar_one()
 
     assert final_token_row.revoked_at is not None

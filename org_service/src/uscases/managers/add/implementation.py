@@ -24,6 +24,14 @@ class PostgreSQLAddManagerStructAdmUseCase(AbstractAddManagerStructAdmUseCase):
                 company_id=company_id,
             )
 
+            if old_users_position.role == Role.MANAGER:
+                return ManagerDTO(
+                    user_id=old_users_position.user_id,
+                    struct_adm_id=old_users_position.struct_adm_id,
+                    position_id=old_users_position.position_id,
+                    role=old_users_position.role,
+                )
+
             users_position = await uow.users_position.update_role(
                 dto=UpdateRoleUsersPositionDTO(
                     user_id=old_users_position.user_id,

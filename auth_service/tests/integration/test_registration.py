@@ -1,11 +1,10 @@
 import pytest
-from sqlalchemy import select
-
 from infrastructure.databases.postgresql.models.invite import Invite, InviteStatus
 from infrastructure.databases.postgresql.models.members import MemberRoles
 from infrastructure.databases.postgresql.models.outbox_event import OutboxEvent
 from infrastructure.databases.postgresql.models.refresh_token import RefreshToken
 from infrastructure.databases.postgresql.models.user import UserStatus
+from sqlalchemy import select
 
 from .register_user import register_user
 
@@ -53,21 +52,24 @@ async def test_full_user_registration_flow(client, session):
     assert invite.accepted_at is not None
 
     refresh_tokens = (
-        await session.execute(
-            select(RefreshToken)
-            .where(RefreshToken.user_id == user.id))
-    ).scalars().all()
+        (await session.execute(select(RefreshToken).where(RefreshToken.user_id == user.id))).scalars().all()
+    )
 
     assert len(refresh_tokens) == 1
     assert refresh_tokens[0].revoked_at is None
     assert refresh_tokens[0].expires_at > invite.accepted_at
 
     outbox_events = (
-        await session.execute(
-            select(OutboxEvent)
-            .where(OutboxEvent.aggregate_id.in_([user.id, company.id]))
-            .order_by(OutboxEvent.occurred_at)
-        )).scalars().all()
+        (
+            await session.execute(
+                select(OutboxEvent)
+                .where(OutboxEvent.aggregate_id.in_([user.id, company.id]))
+                .order_by(OutboxEvent.occurred_at)
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     event_types = {event.event_type for event in outbox_events}
 

@@ -1,4 +1,3 @@
-import uuid
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -17,14 +16,19 @@ class PostgreSQLOutboxEventRepository(AbstractOutboxEventRepository):
         self._session = session
 
     async def create(self, dto: CreateOutboxEventDTO) -> OutboxEventDTO:
-        dedup_key = compute_dedup_key(event_type=dto.event_type, aggregate_id=dto.aggregate_id, payload=dto.payload)
+        dedup_key = compute_dedup_key(
+            event_type=dto.event_type,
+            aggregate_id=dto.aggregate_id,
+            payload=dto.payload,
+            correlation_id=dto.correlation_id,
+        )
 
         db_outbox_event = OutboxEventModel(
             event_type=dto.event_type.value,
             payload=dto.payload,
             aggregate_id=dto.aggregate_id,
             schema_version=dto.schema_version,
-            correlation_id=dto.correlation_id or uuid.uuid4(),
+            correlation_id=dto.correlation_id,
             causation_id=dto.causation_id,
             dedup_key=dedup_key,
             producer=SERVICE_NAME,

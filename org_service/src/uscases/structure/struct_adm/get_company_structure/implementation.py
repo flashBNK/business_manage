@@ -27,7 +27,6 @@ class PostgreSQLGetCompanyStructureUseCase(AbstractGetCompanyStructureUseCase):
                     id=struct_adm.id,
                     name=struct_adm.name,
                     path=struct_adm.path,
-                    manager_id=struct_adm.manager_id,
                 )
                 for struct_adm in list_tree
             }

@@ -15,7 +15,7 @@ def make_sign_up_payload(
     password: str | None = None,
     first_name: str = "John",
     last_name: str = "Doe",
-    company_name: str | None = None
+    company_name: str | None = None,
 ) -> dict:
     return {
         "email": email,

@@ -17,7 +17,12 @@ class PostgreSQLOutboxEventRepository(AbstractOutboxEventRepository):
         self._session = session
 
     async def create(self, dto: CreateOutboxEventDTO) -> OutboxEventDTO:
-        dedup_key = compute_dedup_key(event_type=dto.event_type, aggregate_id=dto.aggregate_id, payload=dto.payload)
+        dedup_key = compute_dedup_key(
+            event_type=dto.event_type,
+            aggregate_id=dto.aggregate_id,
+            payload=dto.payload,
+            correlation_id=dto.correlation_id,
+        )
 
         db_outbox_event = OutboxEventModel(
             event_type=dto.event_type.value,
