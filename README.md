@@ -77,7 +77,7 @@ cp auth_service/config/keys/jwt-public.pem tasks_service/config/keys/
 docker compose up --build
 ```
 
-Накатить миграции (каждому сервису — свои):
+Накатить миграции:
 
 ```bash
 docker compose exec -w /app/auth_service auth_service alembic upgrade head
@@ -146,20 +146,40 @@ DELETE /structure/{id}/positions/{position_id}/employees/{user_id}
 ```
 POST   /tasks                          создать задачу
 GET    /tasks                          список задач компании
-GET    /tasks/{task_id}
-PATCH  /tasks/{task_id}
-PATCH  /tasks/{task_id}/change_status   смена статуса (публикует task.status_changed)
-DELETE /tasks/{task_id}                 мягкое удаление
+GET    /tasks/{task_id}                получить задачу
+PATCH  /tasks/{task_id}                изменить задачу
+PATCH  /tasks/{task_id}/change_status   сменить статус
+DELETE /tasks/{task_id}                 удалить
 ```
 
 ## Тесты
 
-Интеграционные тесты на HTTP-ручки, тесты Kafka-обработчиков (включая идемпотентность и компенсации) и тесты саги регистрации.
+Тесты запускаются отдельно для каждого микросервиса командой "pytest" из его корневого каталога. Для каждого сервиса нужна отдельная тестовая база PostgreSQL, тесты очищают её между проверками.
 
-Каждому сервису нужен `config/.env.test` с `DATABASE_URL` на отдельную тестовую базу. Запуск из корня сервиса:
+Сначала поднимите контейнеры PostgreSQL:
 
 ```bash
-cd auth_service && poetry run pytest
-cd org_service && poetry run pytest
-cd tasks_service && poetry run pytest
+docker compose up -d auth_postgres org_postgres tasks_postgres
 ```
+
+Один раз создайте в каждом контейнере базу для тестов. Команды используют пользователя и основную базу, настроенные в контейнере, а имя тестовой базы задано отдельно:
+
+```bash
+docker compose exec auth_postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE DATABASE auth_service_test_db OWNER $POSTGRES_USER;"'
+docker compose exec org_postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE DATABASE org_service_test_db OWNER $POSTGRES_USER;"'
+docker compose exec tasks_postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE DATABASE tasks_service_test_db OWNER $POSTGRES_USER;"'
+```
+
+Скопируйте шаблоны в ".env.test" файлы и укажите в них те же учётные данные PostgreSQL, что заданы в корневом ".env":
+
+В DATABASE_URL используется localhost и опубликованный порт контейнера.
+
+Из корня проекта запускайте нужный сервис отдельно:
+
+```bash
+(cd auth_service && pytest)
+(cd org_service && pytest)
+(cd tasks_service && pytest)
+```
+
+Saga-тесты в "auth_service" дополнительно обращаются к "org_service" и "tasks_service" на портах 8001 и 8002, а также к Kafka на порту 9092. Для них поднимите весь Docker Compose.
