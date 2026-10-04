@@ -13,7 +13,7 @@ class AbstractTaskAssigneesRepository(AbstractRepository[TaskAssigneesDTO, UUID,
         raise AssigneesNotFound
 
     @abstractmethod
-    async def delete_by_list(self, assignee_ids: list[UUID]) -> None:
+    async def delete_by_list(self, assignee_ids: list[UUID], task_id: UUID) -> None:
         raise AssigneesNotFound
 
     @abstractmethod

@@ -4,7 +4,7 @@ import uuid
 from domain.invite.exceptions import InviteNotFound
 from domain.invite.models import CreateInviteDTO, InviteDTO, UpdateInviteDTO
 from domain.invite.repository import AbstractInviteRepository
-from infrastructure.databases.postgresql.models.invite import Invite as InviteModel
+from infrastructure.databases.postgresql.models.invite import Invite as InviteModel, InviteStatus
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,7 +38,7 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
         return self._to_domain(db_invite)
 
     async def get_by_email(self, email: str) -> InviteDTO | None:
-        query = select(InviteModel).where(InviteModel.email == email)
+        query = select(InviteModel).where(InviteModel.email == email).with_for_update()
         result = await self._session.execute(query)
         invite = result.scalar_one_or_none()
 
@@ -56,6 +56,8 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
 
         if dto.attempts is not None:
             invite.attempts = dto.attempts
+            if invite.attempts >= 5:
+                dto.status = InviteStatus.REVOKED
         if dto.status is not None:
             invite.status = dto.status
             if dto.status == "accepted":
@@ -64,7 +66,6 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
             invite.account_id = dto.account_id
 
         await self._session.flush()
-
         return self._to_domain(invite)
 
     async def delete(self, invite_id: uuid.UUID) -> None:
@@ -104,6 +105,22 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
             return None
 
         return self._to_domain(invite)
+
+
+    async def update_by_email(self, email: str) -> InviteDTO:
+        stmt = select(InviteModel).where(InviteModel.email == email)
+        result = await self._session.execute(stmt)
+        invite = result.scalar_one_or_none()
+
+        if not invite:
+            raise InviteNotFound
+
+        invite.attempts = invite.attempts + 1
+        if invite.attempts >= 5:
+            invite.status = InviteStatus.REVOKED
+        await self._session.flush()
+        return self._to_domain(invite)
+
 
     @staticmethod
     def _to_domain(invite: InviteModel) -> InviteDTO:

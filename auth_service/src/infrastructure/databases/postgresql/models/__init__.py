@@ -8,6 +8,7 @@ from .outbox_event import OutboxEvent
 from .refresh_token import RefreshToken
 from .registration_saga import RegistrationSaga
 from .secret import Secret
+from .ticket import Ticket
 from .user import User
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "OutboxEvent",
     "RegistrationSaga",
     "InboxEvent",
+    "Ticket",
 ]

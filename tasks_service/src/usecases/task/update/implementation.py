@@ -45,7 +45,7 @@ class PostgreSQLUpdateTaskUseCase(AbstractUpdateTaskUseCase):
                 create_watcher_ids = new_watcher_ids - (old_watcher_ids - remove_watcher_ids)
 
                 if remove_watcher_ids:
-                    await uow.task_watcher.delete_by_list(watcher_ids=list(remove_watcher_ids))
+                    await uow.task_watcher.delete_by_list(watcher_ids=list(remove_watcher_ids), task_id=task.id)
 
                 if create_watcher_ids:
                     await uow.task_watcher.create_many(watcher_ids=list(create_watcher_ids), task_id=task.id)
@@ -58,7 +58,7 @@ class PostgreSQLUpdateTaskUseCase(AbstractUpdateTaskUseCase):
                 create_assignee_ids = new_assignee_ids - (old_assignee_ids - remove_assignee_ids)
 
                 if remove_assignee_ids:
-                    await uow.task_assignees.delete_by_list(assignee_ids=list(remove_assignee_ids))
+                    await uow.task_assignees.delete_by_list(assignee_ids=list(remove_assignee_ids), task_id=task.id)
 
                 if create_assignee_ids:
                     await uow.task_assignees.create_many(watcher_ids=list(create_assignee_ids), task_id=task.id)

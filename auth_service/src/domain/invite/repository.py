@@ -17,3 +17,7 @@ class AbstractInviteRepository(ABC):
     @abstractmethod
     async def get_by_account_id(self, account_id: uuid.UUID) -> InviteDTO | None:
         raise InviteNotFound
+
+    @abstractmethod
+    async def update_by_email(self, email: str) -> InviteDTO:
+        raise InviteNotFound

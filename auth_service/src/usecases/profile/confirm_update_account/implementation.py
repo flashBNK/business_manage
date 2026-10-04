@@ -25,6 +25,7 @@ class PostgreSQLConfirmUpdateAccountUseCase(AbstractConfirmUpdateAccountUseCase)
         async with self._uow as uow:
             invite = await uow.invite.get_by_code(dto.invite_code)
             log.info("Проверка", invite=invite)
+            await uow.invite.update_by_email(invite_id=invite.id)
 
             if not invite or invite.status != InviteStatus.PENDING:
                 raise InvalidOrExpiredCode

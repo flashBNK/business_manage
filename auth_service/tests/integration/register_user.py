@@ -32,6 +32,8 @@ async def register_user(
     confirm_response = await client.post("/api/v1/sign-up", json={"email": email, "code": invite.code})
 
     assert confirm_response.status_code == 201
+    ticket = confirm_response.json()["ticket"]
+    assert ticket
 
     account = (await session.execute(select(Account).where(Account.email == email))).scalar_one()
 
@@ -46,6 +48,7 @@ async def register_user(
             "first_name": first_name,
             "last_name": last_name,
             "company_name": company_name,
+            "code": ticket,
         },
     )
 
@@ -78,6 +81,7 @@ async def register_user(
         "company": company,
         "member": member,
         "invite": invite,
+        "ticket": ticket,
         "access_token": token_data["access_token"],
         "refresh_token": token_data["refresh_token"],
         "user_id": user.id,

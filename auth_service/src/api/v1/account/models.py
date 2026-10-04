@@ -60,4 +60,5 @@ class CompleteSingUpSchema(BaseModel):
     password: str = Field(alias="password")
     first_name: str
     last_name: str
+    code: str
     company_name: str | None

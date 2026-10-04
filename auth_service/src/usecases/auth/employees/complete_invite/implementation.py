@@ -29,7 +29,11 @@ class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseC
 
         async with self._uow as uow:
             invite = await uow.invite.get_by_code(code=dto.invite_token)
-            if not invite or invite.expires_at < datetime.datetime.now(datetime.UTC):
+            if not invite:
+                raise InvalidOrExpiredCode
+            await uow.invite.update(invite_id=invite.id, dto=UpdateInviteDTO(attempts=invite.attempts + 1))
+
+            if invite.expires_at < datetime.datetime.now(datetime.UTC):
                 raise InvalidOrExpiredCode
             elif invite.status != InviteStatus.PENDING:
                 raise InviteAlreadyUsed

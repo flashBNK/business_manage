@@ -56,6 +56,7 @@ async def clean_database(engine):
                     refresh_token,
                     members,
                     secret,
+                    ticket,
                     invite,
                     credentials,
                     "user",

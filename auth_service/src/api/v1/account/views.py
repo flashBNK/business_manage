@@ -19,6 +19,7 @@ from domain.company.exceptions import CompanyNameIsUsed
 from domain.invite.exceptions import InvalidOrExpiredCode, TooManyAttempts
 from domain.refresh_token.exceptions import InvalidRefreshToken
 from domain.secret.exceptions import SecretNotFound, WrongSecretPassword
+from domain.ticket.exceptions import InvalidOrExpiredTicket
 from domain.token.models import LoginDTO, TokenDTO
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
@@ -90,13 +91,20 @@ async def confirm_account(
     )
 
     try:
-        account = await usecase.execute(dto)
-    except InvalidOrExpiredCode as exc:
+        account, ticket = await usecase.execute(dto)
+        if not account or not ticket:
+            raise InvalidOrExpiredTicket
+    except (InvalidOrExpiredCode, InvalidOrExpiredTicket) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from None
     except TooManyAttempts as exc:
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from None
 
-    return JSONResponse(_to_schema(account).model_dump(mode="json"), status_code=status.HTTP_201_CREATED)
+    content = {
+        "account": _to_schema(account).model_dump(mode="json"),
+        "ticket": ticket,
+    }
+
+    return JSONResponse(content, status_code=status.HTTP_201_CREATED)
 
 
 @router.post("/login", response_model=LoginResultSchema)
@@ -132,14 +140,17 @@ async def complete_sign_up(
         first_name=payload.first_name,
         last_name=payload.last_name,
         company_name=payload.company_name if payload.company_name else None,
+        code=payload.code
     )
 
     try:
         result = await usecase.execute(dto)
     except EmailNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
-    except (AccountAlreadyRegistered, CompanyNameIsUsed) as exc:
+    except (AccountAlreadyRegistered, CompanyNameIsUsed, InvalidOrExpiredTicket) as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
+    except TooManyAttempts as exc:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from None
 
     token = LoginResultSchema(access_token=result.access_token, refresh_token=result.refresh_token)
 

@@ -29,6 +29,7 @@ class CompleteSignUpDTO:
     first_name: str
     last_name: str
     company_name: str
+    code: str
 
 
 @dataclass(slots=True)

@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, UTC
 
 from domain.account.exceptions import AccountAlreadyRegistered, EmailNotFound
 from domain.account.models import CompleteSignUpDTO
@@ -8,6 +9,7 @@ from domain.member.models import CreateMemberDTO
 from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
 from domain.refresh_token.issue_tokens import issue_token_pair
 from domain.secret.models import CreateSecretDTO
+from domain.ticket.exceptions import InvalidOrExpiredTicket
 from domain.token.models import LoginResultDTO, MembershipAdmission, TokenDTO
 from domain.token.repository import AbstractTokenService
 from domain.user.models import CreateUserDTO
@@ -31,6 +33,11 @@ class PostgreSQLCompleteSignUpUseCase(AbstractCompleteSignUpUseCase):
         member = None
 
         async with self._uow as uow:
+            ticket = await uow.ticket.get_by_code(code=dto.code)
+            if not ticket or ticket.email != dto.email or ticket.attempts >= 3 or ticket.expires_at < datetime.now(UTC):
+                raise InvalidOrExpiredTicket
+            await uow.ticket.update(ticket_id=ticket.id)
+
             account = await uow.account.get_by_email(dto.email)
             if account is None:
                 raise EmailNotFound
@@ -105,5 +112,7 @@ class PostgreSQLCompleteSignUpUseCase(AbstractCompleteSignUpUseCase):
                     subject=user.id,
                     memberships=[],
                 )
+
+            await uow.ticket.delete(ticket_id=ticket.id)
 
             return await issue_token_pair(uow=uow, payload=payload, token_service=self._token_service)

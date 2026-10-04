@@ -10,6 +10,7 @@ from .refresh_token.refresh_token import PostgreSQLRefreshTokenRepository
 from .registration_saga.registration_saga import PostgreSQLRegistrationSagaRepository
 from .secret.secret import PostgreSQLSecretRepository
 from .user.user import PostgreSQLUserRepository
+from .ticket.ticket import PostgreSQLTicketRepository
 
 
 class PostgreSQLAuthUnitOfWork:
@@ -26,6 +27,7 @@ class PostgreSQLAuthUnitOfWork:
         self.outbox_event: PostgreSQLOutboxEventRepository | None = None
         self.registration_saga: PostgreSQLRegistrationSagaRepository | None = None
         self.inbox_event: PostgreSQLInboxEventRepository
+        self.ticket: PostgreSQLTicketRepository | None = None
 
     async def __aenter__(self):
         self.account = PostgreSQLAccountRepository(self._session)
@@ -38,6 +40,7 @@ class PostgreSQLAuthUnitOfWork:
         self.outbox_event = PostgreSQLOutboxEventRepository(self._session)
         self.registration_saga = PostgreSQLRegistrationSagaRepository(self._session)
         self.inbox_event = PostgreSQLInboxEventRepository(self._session)
+        self.ticket = PostgreSQLTicketRepository(self._session)
         return self
 
     async def __aexit__(self, exc_type: Exception | None, exc_val, traceback):
@@ -56,6 +59,7 @@ class PostgreSQLAuthUnitOfWork:
         self.outbox_event = None
         self.registration_saga = None
         self.inbox_event = None
+        self.ticket = None
 
     async def commit(self):
         await self._session.commit()

@@ -8,6 +8,7 @@ from domain.struct_adm.exceptions import StructAdmNotFound
 from domain.struct_adm.models import CreateStructAdmDTO
 from domain.struct_adm_position.exceptions import StructAdmPositionNotFound
 from domain.struct_adm_position.models import CreateStructAdmPositionDTO
+from domain.users_position.create_helper import assign_employee
 from domain.users_position.exceptions import UsersPositionNotFound
 from domain.users_position.models import CreateUsersPositionDTO, GetUsersPositionDTO
 from domain.users_replica.exceptions import UsersReplicaNotFound
@@ -58,40 +59,8 @@ async def handle_registration_org_provision(event: EventEnvelopeDTO, uow: Postgr
     position_id = UUID(payload["position_id"])
 
     try:
-        struct_adm_position = await uow.struct_adm_position.get_by_pair(
-            dto=CreateStructAdmPositionDTO(struct_adm_id=struct_adm_id, position_id=position_id)
-        )
-        if struct_adm_position is None:
-            raise StructAdmPositionNotFound
-
-        try:
-            users_position = await uow.users_position.get_for_check(
-                dto=GetUsersPositionDTO(user_id=user_id, struct_adm_id=struct_adm_id, position_id=position_id),
-                company_id=company_id,
-            )
-        except UsersPositionNotFound:
-            users_position = None
-
-        if users_position is None:
-            users_position = await uow.users_position.create(
-                dto=CreateUsersPositionDTO(user_id=user_id, struct_adm_id=struct_adm_id, position_id=position_id)
-            )
-
-            await uow.outbox_event.create(
-                CreateOutboxEventDTO(
-                    event_type=OutboxEventType.EMPLOYEE_POSITION_CHANGED,
-                    aggregate_id=user_id,
-                    correlation_id=event.correlation_id,
-                    causation_id=event.event_id,
-                    payload={
-                        "user_id": str(user_id),
-                        "struct_adm_id": str(struct_adm_id),
-                        "company_id": str(company_id),
-                        "position_id": str(position_id),
-                        "role": str(users_position.role),
-                    },
-                )
-            )
+        dto = CreateUsersPositionDTO(user_id=user_id, struct_adm_id=struct_adm_id, position_id=position_id)
+        await assign_employee(uow=uow, dto=dto, company_id=company_id, correlation_id=event.correlation_id)
 
         await uow.outbox_event.create(
             CreateOutboxEventDTO(
