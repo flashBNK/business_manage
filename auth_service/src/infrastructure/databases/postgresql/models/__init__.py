@@ -1,6 +1,7 @@
 from .account import Account
 from .company import Company
 from .credentials import Credentials
+from .failed_message import FailedMessage
 from .inbox_event import InboxEvent
 from .invite import Invite
 from .members import Members
@@ -24,4 +25,5 @@ __all__ = [
     "RegistrationSaga",
     "InboxEvent",
     "Ticket",
+    "FailedMessage",
 ]

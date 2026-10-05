@@ -140,7 +140,7 @@ async def complete_sign_up(
         first_name=payload.first_name,
         last_name=payload.last_name,
         company_name=payload.company_name if payload.company_name else None,
-        code=payload.code
+        code=payload.code,
     )
 
     try:

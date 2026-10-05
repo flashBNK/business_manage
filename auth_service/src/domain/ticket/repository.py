@@ -2,9 +2,10 @@ import uuid
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from .exceptions import TicketNotFound
-from .models import TicketDTO, CreateTicketDTO
 from domain.abstract import AbstractRepository
+
+from .exceptions import TicketNotFound
+from .models import CreateTicketDTO, TicketDTO
 
 
 class AbstractTicketRepository(AbstractRepository[TicketDTO, uuid.UUID, CreateTicketDTO], ABC):

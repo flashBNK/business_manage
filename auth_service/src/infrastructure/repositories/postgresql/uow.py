@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .account.account import PostgreSQLAccountRepository
 from .company.company import PostgreSQLCompanyRepository
+from .failed_message.failed_message import PostgreSQLFailedMessageRepository
 from .inbox_event.inbox_event import PostgreSQLInboxEventRepository
 from .invite.invite import PostgreSQLInviteRepository
 from .member.member import PostgreSQLMemberRepository
@@ -9,8 +10,8 @@ from .outbox_event.outbox_event import PostgreSQLOutboxEventRepository
 from .refresh_token.refresh_token import PostgreSQLRefreshTokenRepository
 from .registration_saga.registration_saga import PostgreSQLRegistrationSagaRepository
 from .secret.secret import PostgreSQLSecretRepository
-from .user.user import PostgreSQLUserRepository
 from .ticket.ticket import PostgreSQLTicketRepository
+from .user.user import PostgreSQLUserRepository
 
 
 class PostgreSQLAuthUnitOfWork:
@@ -26,8 +27,9 @@ class PostgreSQLAuthUnitOfWork:
         self.refresh_token: PostgreSQLRefreshTokenRepository | None = None
         self.outbox_event: PostgreSQLOutboxEventRepository | None = None
         self.registration_saga: PostgreSQLRegistrationSagaRepository | None = None
-        self.inbox_event: PostgreSQLInboxEventRepository
+        self.inbox_event: PostgreSQLInboxEventRepository | None = None
         self.ticket: PostgreSQLTicketRepository | None = None
+        self.failed_message: PostgreSQLFailedMessageRepository | None = None
 
     async def __aenter__(self):
         self.account = PostgreSQLAccountRepository(self._session)
@@ -41,6 +43,7 @@ class PostgreSQLAuthUnitOfWork:
         self.registration_saga = PostgreSQLRegistrationSagaRepository(self._session)
         self.inbox_event = PostgreSQLInboxEventRepository(self._session)
         self.ticket = PostgreSQLTicketRepository(self._session)
+        self.failed_message = PostgreSQLFailedMessageRepository(self._session)
         return self
 
     async def __aexit__(self, exc_type: Exception | None, exc_val, traceback):
@@ -60,6 +63,7 @@ class PostgreSQLAuthUnitOfWork:
         self.registration_saga = None
         self.inbox_event = None
         self.ticket = None
+        self.failed_message = None
 
     async def commit(self):
         await self._session.commit()

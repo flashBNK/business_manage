@@ -1,6 +1,6 @@
 import datetime
-import string
 import secrets
+import string
 
 from domain.account.models import AccountDTO, ConfirmAccountDTO, CreateAccountDTO
 from domain.invite.exceptions import InvalidOrExpiredCode, TooManyAttempts
@@ -51,8 +51,8 @@ class PostgreSQLConfirmAccountUseCase(AbstractConfirmAccountUseCase):
 
             ticket_dto = CreateTicketDTO(
                 email=account.email,
-                code=''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(16)),
-                expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=15)
+                code="".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(16)),
+                expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=15),
             )
 
             ticket = await uow.ticket.create(dto=ticket_dto)

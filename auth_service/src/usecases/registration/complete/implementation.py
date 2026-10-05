@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from domain.account.exceptions import AccountAlreadyRegistered, EmailNotFound
 from domain.account.models import CompleteSignUpDTO
@@ -34,7 +34,12 @@ class PostgreSQLCompleteSignUpUseCase(AbstractCompleteSignUpUseCase):
 
         async with self._uow as uow:
             ticket = await uow.ticket.get_by_code(code=dto.code)
-            if not ticket or ticket.email != dto.email or ticket.attempts >= 3 or ticket.expires_at < datetime.now(UTC):
+            if (
+                not ticket
+                or ticket.email != dto.email
+                or ticket.attempts >= 3
+                or ticket.expires_at < datetime.now(UTC)
+            ):
                 raise InvalidOrExpiredTicket
             await uow.ticket.update(ticket_id=ticket.id)
 

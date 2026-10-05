@@ -40,8 +40,7 @@ class PostgreSQLTaskWatcherRepository(AbstractTaskWatcherRepository):
 
     async def delete_by_list(self, watcher_ids: list[UUID], task_id: UUID) -> None:
         stmt = delete(TaskWatchersModel).where(
-            TaskWatchersModel.user_id.in_(watcher_ids),
-            TaskWatchersModel.task_id == task_id
+            TaskWatchersModel.user_id.in_(watcher_ids), TaskWatchersModel.task_id == task_id
         )
         await self._session.execute(stmt)
         await self._session.flush()

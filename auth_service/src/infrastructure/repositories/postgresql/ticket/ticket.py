@@ -1,4 +1,3 @@
-import datetime
 import uuid
 
 from domain.ticket.exceptions import TicketNotFound, TooManyAttempts
@@ -68,7 +67,6 @@ class PostgreSQLTicketRepository(AbstractTicketRepository):
 
         await self._session.delete(ticket)
         await self._session.flush()
-
 
     async def get(self, invite_id: uuid.UUID) -> TicketDTO | None:
         pass

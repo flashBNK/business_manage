@@ -7,9 +7,7 @@ from domain.position.exceptions import PositionNotFound
 from domain.struct_adm.exceptions import StructAdmNotFound
 from domain.struct_adm.models import CreateStructAdmDTO
 from domain.struct_adm_position.exceptions import StructAdmPositionNotFound
-from domain.struct_adm_position.models import CreateStructAdmPositionDTO
 from domain.users_position.create_helper import assign_employee
-from domain.users_position.exceptions import UsersPositionNotFound
 from domain.users_position.models import CreateUsersPositionDTO, GetUsersPositionDTO
 from domain.users_replica.exceptions import UsersReplicaNotFound
 from domain.users_replica.models import CreateUsersReplicaDTO

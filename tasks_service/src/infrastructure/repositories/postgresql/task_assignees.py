@@ -37,8 +37,7 @@ class PostgreSQLTaskAssigneesRepository(AbstractTaskAssigneesRepository):
 
     async def list_by_task(self, task_id: UUID) -> list[TaskAssigneesDTO]:
         stmt = select(TaskAssigneesModel).where(
-            TaskAssigneesModel.task_id == task_id,
-            TaskAssigneesModel.task_id == task_id
+            TaskAssigneesModel.task_id == task_id, TaskAssigneesModel.task_id == task_id
         )
         result = await self._session.execute(stmt)
         assignees = result.scalars().all()
@@ -50,8 +49,8 @@ class PostgreSQLTaskAssigneesRepository(AbstractTaskAssigneesRepository):
 
     async def delete_by_list(self, assignee_ids: list[UUID], task_id: UUID) -> None:
         stmt = delete(TaskAssigneesModel).where(
-            TaskAssigneesModel.task_id == task_id,
-            TaskAssigneesModel.user_id.in_(assignee_ids))
+            TaskAssigneesModel.task_id == task_id, TaskAssigneesModel.user_id.in_(assignee_ids)
+        )
         await self._session.execute(stmt)
         await self._session.flush()
 
