@@ -1,4 +1,5 @@
 from .company_replica import CompanyReplica
+from .failed_message import FailedMessage
 from .inbox_event import InboxEvent
 from .outbox_event import OutboxEvent
 from .position import Position
@@ -8,6 +9,7 @@ from .users_position import UsersPosition
 from .users_replica import UsersReplica
 
 __all__ = [
+    "FailedMessage",
     "Position",
     "StructAdm",
     "StructAdmPosition",

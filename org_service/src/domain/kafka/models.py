@@ -36,3 +36,11 @@ class EventEnvelopeDTO:
             occurred_at=datetime.fromisoformat(data["occurred_at"]),
             payload=data["payload"],
         )
+
+
+@dataclass
+class ProcessingResult:
+    success: bool
+    attempts: int
+    error_type: str | None = None
+    error_message: str | None = None

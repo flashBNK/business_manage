@@ -53,6 +53,7 @@ async def clean_database(engine):
             text(
                 """
                 TRUNCATE TABLE
+                    failed_message,
                     outbox_event,
                     inbox_event,
                     task,

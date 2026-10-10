@@ -1,7 +1,7 @@
 import asyncio
 
 from domain.inbox_event.models import CreateInboxEventDTO
-from domain.kafka.models import EventEnvelopeDTO
+from domain.kafka.models import EventEnvelopeDTO, ProcessingResult
 from infrastructure.databases.postgresql.session_manager import DatabaseSessionManager
 from infrastructure.di.injection import build_unit_of_work
 from logger import get_logger
@@ -17,7 +17,7 @@ async def process_event_with_retry(
     handler,
     session_manager: DatabaseSessionManager,
     consumer_name: str,
-) -> bool:
+) -> ProcessingResult:
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
             async with session_manager.session() as session:
@@ -34,10 +34,16 @@ async def process_event_with_retry(
                         event_type=event.event_type,
                         attempt=attempt,
                     )
-                    return True
+                    return ProcessingResult(
+                        success=True,
+                        attempts=attempt,
+                        error_type=None,
+                        error_message=None,
+                    )
+
         except asyncio.CancelledError:
             raise
-        except Exception:
+        except Exception as exc:
             log.exception(
                 "Kafka event processing failed",
                 event_id=event.event_id,
@@ -47,11 +53,21 @@ async def process_event_with_retry(
             )
 
             if attempt >= MAX_ATTEMPTS:
-                return False
+                return ProcessingResult(
+                    success=False,
+                    attempts=attempt,
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                )
 
             delay = BASE_RETRY_DELAY * (2 ** (attempt - 1))
 
             log.info("Retrying Kafka event", event_id=event.event_id, retry_in=delay)
             await asyncio.sleep(delay)
 
-    return False
+    return ProcessingResult(
+        success=False,
+        attempts=MAX_ATTEMPTS,
+        error_type=None,
+        error_message=None,
+    )
