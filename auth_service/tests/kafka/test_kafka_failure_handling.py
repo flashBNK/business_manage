@@ -127,10 +127,10 @@ async def test_consumer_stops_after_error(session_manager, message, monkeypatch)
     consumer = AsyncMock()
     next_message = SimpleNamespace(topic=message.topic, partition=message.partition, offset=43)
     consumer.__aiter__.return_value = [message, next_message]
-    process_message = AsyncMock(side_effect=OSError("database unavailable"))
+    process_message = AsyncMock(side_effect=RuntimeError("unexpected error"))
     monkeypatch.setattr(consumer_loop, "process_message", process_message)
 
-    with pytest.raises(OSError, match="database unavailable"):
+    with pytest.raises(RuntimeError, match="unexpected error"):
         await consumer_loop.run_event_consumer(consumer, session_manager)
 
     assert process_message.await_count == 1

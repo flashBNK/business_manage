@@ -31,3 +31,12 @@ class KafkaEventConsumer:
             message.partition,
         )
         await self._consumer.commit({topic_partition: OffsetAndMetadata(message.offset + 1, "")})
+
+    def pause(self, topic_partition: TopicPartition) -> None:
+        self._consumer.pause(topic_partition)
+
+    def seek(self, topic_partition: TopicPartition, offset: int) -> None:
+        self._consumer.seek(topic_partition, offset)
+
+    def resume(self, topic_partition: TopicPartition) -> None:
+        self._consumer.resume(topic_partition)

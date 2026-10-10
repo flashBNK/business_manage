@@ -2,6 +2,10 @@ import asyncio
 from base64 import b64encode
 from json import JSONDecodeError, loads
 
+from aiokafka import TopicPartition
+from aiokafka.errors import KafkaConnectionError, KafkaTimeoutError
+from sqlalchemy.exc import OperationalError
+
 from domain.failed_message.models import CreateFailedMessageDTO
 from domain.kafka.models import EventEnvelopeDTO
 from infrastructure.databases.postgresql.models.failed_message import FailedMessageStatus
@@ -58,6 +62,23 @@ async def run_event_consumer(consumer: KafkaEventConsumer, session_manager: Data
                 await process_message(consumer=consumer, session_manager=session_manager, message=message)
             except asyncio.CancelledError:
                 raise
+            except (OSError, OperationalError, KafkaConnectionError, KafkaTimeoutError):
+                log.exception(
+                    "Error processing Kafka message",
+                    topic=message.topic,
+                    partition=message.partition,
+                    offset=message.offset,
+                )
+
+                topic_partition = TopicPartition(message.topic, message.partition)
+
+                consumer.pause(topic_partition)
+                consumer.seek(topic_partition, message.offset)
+
+                await asyncio.sleep(1)
+
+                consumer.resume(topic_partition)
+
             except Exception:
                 log.exception(
                     "Error processing Kafka message",
