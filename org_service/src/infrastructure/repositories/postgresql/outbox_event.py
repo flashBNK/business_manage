@@ -6,8 +6,9 @@ from domain.outbox_event.dedup_key import compute_dedup_key
 from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventDTO, OutboxEventType
 from domain.outbox_event.repository import AbstractOutboxEventRepository
 from infrastructure.databases.postgresql.models.outbox_event import OutboxEvent as OutboxEventModel
-from sqlalchemy import select, update
+from sqlalchemy import select, tuple_, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 SERVICE_NAME = "org_service"
 
@@ -41,10 +42,23 @@ class PostgreSQLOutboxEventRepository(AbstractOutboxEventRepository):
         return self._to_domain(db_outbox_event)
 
     async def get_unpublished(self, limit: int = 100) -> list[OutboxEventDTO]:
+        previous = aliased(OutboxEventModel)
+
+        has_previous = (
+            select(previous.event_id)
+            .where(
+                previous.aggregate_id == OutboxEventModel.aggregate_id,
+                previous.published_at.is_(None),
+                tuple_(previous.occurred_at, previous.event_id)
+                < tuple_(OutboxEventModel.occurred_at, OutboxEventModel.event_id),
+            )
+            .exists()
+        )
+
         stmt = (
             select(OutboxEventModel)
-            .where(OutboxEventModel.published_at.is_(None))
-            .order_by(OutboxEventModel.occurred_at)
+            .where(OutboxEventModel.published_at.is_(None), ~has_previous)
+            .order_by(OutboxEventModel.occurred_at, OutboxEventModel.event_id)
             .limit(limit)
             .with_for_update(
                 skip_locked=True

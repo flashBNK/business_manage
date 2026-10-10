@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey
+from sqlalchemy import DateTime, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..base import Base
@@ -15,6 +15,7 @@ class RegistrationStatus(enum.StrEnum):
     COMPLETED = "completed"
     COMPENSATING = "compensating"
     FAILED = "failed"
+    TIMED_OUT = "timed_out"
 
 
 class RegistrationSaga(Base):
@@ -36,6 +37,8 @@ class RegistrationSaga(Base):
         default=RegistrationStatus.STARTED,
         nullable=False,
     )
+    last_error: Mapped[str | None] = mapped_column(String, nullable=True)
+    deadline_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

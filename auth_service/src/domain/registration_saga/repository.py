@@ -1,5 +1,6 @@
 import uuid
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 from domain.abstract import AbstractRepository
 
@@ -16,5 +17,11 @@ class AbstractRegistrationSagaRepository(
         raise RegistrationSagaNotFound
 
     @abstractmethod
-    async def update_status(self, saga_id: uuid.UUID, status) -> RegistrationSagaDTO:
+    async def update_status(self, saga_id: uuid.UUID, status, deadline_at: datetime | None) -> RegistrationSagaDTO:
+        raise RegistrationSagaNotFound
+
+    async def get_expired(self, now: datetime) -> list[RegistrationSagaDTO]:
+        raise RegistrationSagaNotFound
+
+    async def mark_timeout(self, saga_id: uuid.UUID, last_error: str) -> None:
         raise RegistrationSagaNotFound

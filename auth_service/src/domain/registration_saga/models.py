@@ -15,6 +15,8 @@ class RegistrationSagaDTO:
     status: RegistrationStatus
     created_at: datetime
     updated_at: datetime
+    deadline_at: datetime | None
+    last_error: str | None
 
 
 @dataclass(slots=True)
@@ -23,3 +25,4 @@ class CreateRegistrationSagaDTO:
     company_id: uuid.UUID
     invite_id: uuid.UUID
     correlation_id: uuid.UUID
+    deadline_at: datetime | None

@@ -4,8 +4,6 @@ from json import JSONDecodeError, loads
 
 from aiokafka import TopicPartition
 from aiokafka.errors import KafkaConnectionError, KafkaTimeoutError
-from sqlalchemy.exc import OperationalError
-
 from domain.failed_message.models import CreateFailedMessageDTO
 from domain.kafka.models import EventEnvelopeDTO
 from infrastructure.databases.postgresql.models.failed_message import FailedMessageStatus
@@ -15,6 +13,7 @@ from infrastructure.kafka.consumer.consumer import KafkaEventConsumer
 from infrastructure.kafka.consumer.handlers import EVENT_HANDLERS
 from infrastructure.kafka.consumer.retry import process_event_with_retry
 from logger import get_logger
+from sqlalchemy.exc import OperationalError
 
 log = get_logger(__name__)
 

@@ -1,3 +1,4 @@
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from domain.kafka.models import EventEnvelopeDTO
@@ -23,6 +24,7 @@ async def handle_employee_registered(event: EventEnvelopeDTO, uow: PostgreSQLAut
             company_id=UUID(payload["company_id"]),
             invite_id=UUID(payload["invite_id"]),
             correlation_id=event.correlation_id,
+            deadline_at=datetime.now(UTC) + timedelta(minutes=1),
         )
     )
 
@@ -55,7 +57,9 @@ async def handle_org_completed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitO
     if saga.correlation_id != event.correlation_id or saga.status != RegistrationStatus.STARTED:
         return
 
-    await uow.registration_saga.update_status(saga_id=saga.id, status=RegistrationStatus.ORG_COMPLETED)
+    await uow.registration_saga.update_status(
+        saga_id=saga.id, status=RegistrationStatus.ORG_COMPLETED, deadline_at=datetime.now(UTC) + timedelta(minutes=1)
+    )
 
     await uow.outbox_event.create(
         CreateOutboxEventDTO(
@@ -86,7 +90,11 @@ async def handle_tasks_completed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUni
     if saga.correlation_id != event.correlation_id or saga.status != RegistrationStatus.ORG_COMPLETED:
         return
 
-    await uow.registration_saga.update_status(saga_id=saga.id, status=RegistrationStatus.TASKS_COMPLETED)
+    await uow.registration_saga.update_status(
+        saga_id=saga.id,
+        status=RegistrationStatus.TASKS_COMPLETED,
+        deadline_at=datetime.now(UTC) + timedelta(minutes=1),
+    )
 
     await uow.outbox_event.create(
         CreateOutboxEventDTO(
@@ -112,7 +120,7 @@ async def handle_registration_completed(event: EventEnvelopeDTO, uow: PostgreSQL
     if saga.correlation_id != event.correlation_id or saga.status != RegistrationStatus.TASKS_COMPLETED:
         return
 
-    await uow.registration_saga.update_status(saga_id=saga.id, status=RegistrationStatus.COMPLETED)
+    await uow.registration_saga.update_status(saga_id=saga.id, status=RegistrationStatus.COMPLETED, deadline_at=None)
 
 
 async def handle_tasks_failed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOfWork) -> None:
@@ -124,7 +132,9 @@ async def handle_tasks_failed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOf
     if saga.correlation_id != event.correlation_id or saga.status != RegistrationStatus.ORG_COMPLETED:
         return
 
-    await uow.registration_saga.update_status(saga_id=saga.id, status=RegistrationStatus.COMPENSATING)
+    await uow.registration_saga.update_status(
+        saga_id=saga.id, status=RegistrationStatus.COMPENSATING, deadline_at=datetime.now(UTC) + timedelta(minutes=1)
+    )
 
     await uow.outbox_event.create(
         CreateOutboxEventDTO(
@@ -154,7 +164,9 @@ async def handle_org_compensated(event: EventEnvelopeDTO, uow: PostgreSQLAuthUni
 
     await compensate_auth(uow=uow, saga=saga)
 
-    await uow.registration_saga.update_status(saga_id=saga.id, status=RegistrationStatus.FAILED)
+    await uow.registration_saga.update_status(
+        saga_id=saga.id, status=RegistrationStatus.FAILED, deadline_at=None
+    )
 
     await uow.outbox_event.create(
         CreateOutboxEventDTO(
@@ -181,7 +193,7 @@ async def handle_org_failed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOfWo
 
     await compensate_auth(uow=uow, saga=saga)
 
-    await uow.registration_saga.update_status(saga_id=saga.id, status=RegistrationStatus.FAILED)
+    await uow.registration_saga.update_status(saga_id=saga.id, status=RegistrationStatus.FAILED, deadline_at=None)
 
     await uow.outbox_event.create(
         CreateOutboxEventDTO(
