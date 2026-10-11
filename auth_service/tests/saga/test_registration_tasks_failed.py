@@ -2,6 +2,8 @@ from uuid import UUID
 
 import pytest
 from domain.kafka.models import EventEnvelopeDTO
+from infrastructure.databases.postgresql.models.invite import Invite, InviteStatus
+from infrastructure.databases.postgresql.models.members import Members
 from infrastructure.databases.postgresql.models.outbox_event import OutboxEvent
 from infrastructure.databases.postgresql.models.registration_saga import RegistrationSaga, RegistrationStatus
 from infrastructure.databases.postgresql.models.user import User
@@ -99,6 +101,7 @@ async def test_registration_saga_tasks_failure(client, session, admin, org_clien
 
     assert saga is not None
     assert saga.status == RegistrationStatus.COMPENSATING
+    assert saga.last_error == "test failure"
 
     compensate = await session.scalar(
         select(OutboxEvent).where(
@@ -118,14 +121,24 @@ async def test_registration_saga_tasks_failure(client, session, admin, org_clien
 
     assert saga is not None
     assert saga.status == RegistrationStatus.FAILED
+    assert saga.last_error == "test failure"
 
     registration_failed = await session.scalar(
         select(OutboxEvent).where(OutboxEvent.event_type == "registration.failed", OutboxEvent.aggregate_id == saga.id)
     )
     assert registration_failed is not None
+    assert registration_failed.payload["reason"] == saga.last_error
 
     user = await session.scalar(select(User).where(User.id == employee["user_id"]))
-    assert user is None
+    assert user is not None
+
+    invite = await session.get(Invite, employee["invite"].id)
+    assert invite is not None
+    assert invite.status == InviteStatus.REVOKED
+
+    member = await session.scalar(select(Members).where(Members.invite_id == invite.id))
+    assert member is not None
+    assert member.is_active is False
 
     response = await org_client.get(f"/api/v1/companies/{company_id}/structure/{root_id}/employees", headers=headers)
     assert response.status_code == 200

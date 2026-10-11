@@ -118,7 +118,7 @@ async def test_employee_invitation_and_registration_flow(client, session):
 
     member = (await session.execute(select(Members).where(Members.id == employee_member_id))).scalar_one()
 
-    assert member.is_active is True
+    assert member.is_active is False
 
     account = (await session.execute(select(Account).where(Account.id == invite.account_id))).scalar_one()
 
@@ -153,7 +153,7 @@ async def test_employee_invitation_and_registration_flow(client, session):
     assert employee_registered_event.payload["first_name"] == "Employee"
     assert employee_registered_event.payload["last_name"] == "User"
     assert employee_registered_event.payload["role"] == MemberRoles.MEMBER.value
-    assert employee_registered_event.payload["is_active"] is True
+    assert employee_registered_event.payload["is_active"] is False
     assert employee_registered_event.payload["invite_id"] == str(invite.id)
     assert employee_registered_event.payload["struct_adm_id"] == str(struct_adm_id)
     assert employee_registered_event.payload["position_id"] == str(position_id)
@@ -165,9 +165,7 @@ async def test_employee_invitation_and_registration_flow(client, session):
     me_data = me_response.json()
 
     assert me_data["User"] == str(employee_user_id)
-    assert len(me_data["memberships"]) == 1
-    assert me_data["memberships"][0]["company_id"] == str(company_id)
-    assert me_data["memberships"][0]["role"] == MemberRoles.MEMBER.value
+    assert me_data["memberships"] == []
 
     reuse_response = await client.post(
         "/api/v1/employees/invite-complete", json={"invite_token": employee_invite_code, "password": employee_password}
@@ -183,3 +181,7 @@ async def test_employee_invitation_and_registration_flow(client, session):
 
     assert refresh_data["access_token"]
     assert refresh_data["refresh_token"]
+
+    me_response = await client.get("/api/v1/me", headers={"Authorization": f"Bearer {refresh_data['access_token']}"})
+    assert me_response.status_code == 200
+    assert me_response.json()["memberships"] == []

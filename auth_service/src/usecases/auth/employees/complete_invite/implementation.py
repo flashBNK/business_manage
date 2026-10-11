@@ -47,7 +47,6 @@ class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseC
             member = await uow.member.get_by_invite_id(invite_id=invite.id)
             if not member or member.is_active:
                 raise MemberAlreadyActivated
-            member = await uow.member.activation_shift(member_id=member.id, flag=True)
 
             invite = await uow.invite.update(
                 invite_id=invite.id, dto=UpdateInviteDTO(status=InviteStatus.ACCEPTED, account_id=account.id)
@@ -80,9 +79,14 @@ class PostgreSQLCompleteEmployeeInviteUseCase(AbstractCompleteEmployeeInviteUseC
                 company_id=str(member.company_id),
             )
 
+            members = await uow.member.get_by_user_id(user_id=invite.user_id)
+
             payload = TokenDTO(
                 subject=invite.user_id,
-                memberships=[MembershipAdmission(company_id=member.company_id, role=member.role)],
+                memberships=[
+                    MembershipAdmission(company_id=active_member.company_id, role=active_member.role)
+                    for active_member in members
+                ],
             )
 
             return await issue_token_pair(uow=uow, payload=payload, token_service=self._token_service)

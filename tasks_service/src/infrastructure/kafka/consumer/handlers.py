@@ -131,8 +131,11 @@ async def handle_registration_tasks_provision(event: EventEnvelopeDTO, uow: Post
 
 
 async def handle_employee_registration_failed(event: EventEnvelopeDTO, uow: PostgreSQLTasksUnitOfWork) -> None:
-    user_id = UUID(event.payload["user_id"])
-    await uow.users_replica.delete(users_replica_id=user_id)
+    await uow.users_replica.deactivate(
+        users_replica_id=UUID(event.payload["user_id"]),
+        company_id=UUID(event.payload["company_id"]),
+        last_event_at=event.occurred_at
+    )
 
 
 EVENT_HANDLERS = {
@@ -140,4 +143,5 @@ EVENT_HANDLERS = {
     "employee.registered": handle_employee_upsert,
     "registration.tasks.provision": handle_registration_tasks_provision,
     "employee.registration.failed": handle_employee_registration_failed,
+    "employee.activated": handle_employee_upsert,
 }

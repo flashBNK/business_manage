@@ -17,7 +17,9 @@ class AbstractRegistrationSagaRepository(
         raise RegistrationSagaNotFound
 
     @abstractmethod
-    async def update_status(self, saga_id: uuid.UUID, status, deadline_at: datetime | None) -> RegistrationSagaDTO:
+    async def update_status(
+        self, saga_id: uuid.UUID, status, deadline_at: datetime | None, last_error: str | None = None
+    ) -> RegistrationSagaDTO:
         raise RegistrationSagaNotFound
 
     async def get_expired(self, now: datetime) -> list[RegistrationSagaDTO]:

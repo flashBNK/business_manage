@@ -1,9 +1,10 @@
+from datetime import datetime
 from uuid import UUID
 
 from domain.users_replica.models import CreateUsersReplicaDTO, UsersReplicaDTO
 from domain.users_replica.repository import AbstractUsersReplicaRepository
 from infrastructure.databases.postgresql.models.users_replica import UsersReplica as UsersReplicaModel
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -79,6 +80,20 @@ class PostgreSQLUsersReplicaRepository(AbstractUsersReplicaRepository):
             return None
 
         return self._to_domain(users_replica)
+
+
+    async def deactivate(self, users_replica_id: UUID, company_id: UUID, last_event_at: datetime) -> None:
+        stmt = (
+            update(UsersReplicaModel)
+            .where(
+                UsersReplicaModel.id == users_replica_id,
+                UsersReplicaModel.company_id == company_id,
+                UsersReplicaModel.last_event_at < last_event_at,
+            )
+            .values(is_active=False, last_event_at=last_event_at)
+        )
+
+        await self._session.execute(stmt)
 
     @staticmethod
     def _to_domain(users_replica: UsersReplicaModel) -> UsersReplicaDTO:

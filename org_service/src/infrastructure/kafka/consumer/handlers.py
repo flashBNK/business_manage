@@ -145,8 +145,11 @@ async def handle_registration_org_compensate(event: EventEnvelopeDTO, uow: Postg
 
 
 async def handle_employee_registration_failed(event: EventEnvelopeDTO, uow: PostgreSQLOrgUnitOfWork) -> None:
-    user_id = UUID(event.payload["user_id"])
-    await uow.users_replica.delete(users_replica_id=user_id)
+    await uow.users_replica.deactivate(
+        users_replica_id=UUID(event.payload["user_id"]),
+        company_id=UUID(event.payload["company_id"]),
+        last_event_at=event.occurred_at,
+    )
 
 
 EVENT_HANDLERS = {
@@ -156,4 +159,5 @@ EVENT_HANDLERS = {
     "employee.registration.failed": handle_employee_registration_failed,
     "registration.org.provision": handle_registration_org_provision,
     "registration.org.compensate": handle_registration_org_compensate,
+    "employee.activated": handle_employee_upsert,
 }
