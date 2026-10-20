@@ -10,6 +10,7 @@ from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
 
 from .abstract import AbstractCompensateRegistrationUseCase
 
+
 class PostgreSQLCompensateRegistrationUseCase(AbstractCompensateRegistrationUseCase):
     def __init__(self, uow: PostgreSQLAuthUnitOfWork):
         self._uow = uow
@@ -20,8 +21,8 @@ class PostgreSQLCompensateRegistrationUseCase(AbstractCompensateRegistrationUseC
         saga = await uow.registration_saga.get(saga_id=saga.id)
 
         if saga is None or saga.status not in (
-                RegistrationStatus.STARTED,
-                RegistrationStatus.COMPENSATING,
+            RegistrationStatus.STARTED,
+            RegistrationStatus.COMPENSATING,
         ):
             return
 
@@ -34,10 +35,7 @@ class PostgreSQLCompensateRegistrationUseCase(AbstractCompensateRegistrationUseC
         await uow.member.activation_shift(member_id=member.id, flag=False)
 
         await uow.registration_saga.update_status(
-            saga_id=saga.id,
-            status=RegistrationStatus.FAILED,
-            deadline_at=None,
-            last_error=reason
+            saga_id=saga.id, status=RegistrationStatus.FAILED, deadline_at=None, last_error=reason
         )
 
         await uow.outbox_event.create(

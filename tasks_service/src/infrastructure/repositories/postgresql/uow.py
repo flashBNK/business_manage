@@ -1,4 +1,5 @@
 from infrastructure.repositories.postgresql.failed_message import PostgreSQLFailedMessageRepository
+from infrastructure.repositories.postgresql.idempotency_request import PostgreSQLIdempotencyRequestRepository
 from infrastructure.repositories.postgresql.inbox_event import PostgreSQLInboxEventRepository
 from infrastructure.repositories.postgresql.outbox_event import PostgreSQLOutboxEventRepository
 from infrastructure.repositories.postgresql.task import PostgreSQLTaskRepository
@@ -19,6 +20,7 @@ class PostgreSQLTasksUnitOfWork:
         self.task_assignees: PostgreSQLTaskAssigneesRepository | None = None
         self.outbox_event: PostgreSQLOutboxEventRepository | None = None
         self.failed_message: PostgreSQLFailedMessageRepository | None = None
+        self.idempotency_request: PostgreSQLIdempotencyRequestRepository | None = None
 
     async def __aenter__(self):
         self.users_replica = PostgreSQLUsersReplicaRepository(session=self._session)
@@ -28,6 +30,7 @@ class PostgreSQLTasksUnitOfWork:
         self.task_assignees = PostgreSQLTaskAssigneesRepository(session=self._session)
         self.outbox_event = PostgreSQLOutboxEventRepository(session=self._session)
         self.failed_message = PostgreSQLFailedMessageRepository(session=self._session)
+        self.idempotency_request = PostgreSQLIdempotencyRequestRepository(session=self._session)
 
         return self
 
@@ -44,6 +47,7 @@ class PostgreSQLTasksUnitOfWork:
         self.task_assignees = None
         self.outbox_event = None
         self.failed_message = None
+        self.idempotency_request = None
 
     async def commit(self):
         await self._session.commit()

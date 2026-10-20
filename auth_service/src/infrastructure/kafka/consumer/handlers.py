@@ -193,7 +193,7 @@ async def handle_org_compensated(event: EventEnvelopeDTO, uow: PostgreSQLAuthUni
 
     usecase = PostgreSQLCompensateRegistrationUseCase(uow=uow)
 
-    await usecase.execute(saga=saga,reason=saga.last_error or "tasks step failed", causation_id=event.event_id)
+    await usecase.execute(saga=saga, reason=saga.last_error or "tasks step failed", causation_id=event.event_id)
 
 
 async def handle_org_failed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOfWork) -> None:
@@ -210,7 +210,6 @@ async def handle_org_failed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOfWo
     await usecase.execute(
         saga=saga, reason=event.payload.get("reason") or "org step failed", causation_id=event.event_id
     )
-
 
 
 async def handle_employee_created(event, uow) -> None:

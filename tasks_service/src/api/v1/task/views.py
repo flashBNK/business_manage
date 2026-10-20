@@ -1,9 +1,10 @@
 from uuid import UUID
 
+from domain.idempotency.exceptions import IdempotencyConflict
 from domain.task.exceptions import ParticipantInactive, ParticipantNotFound, ParticipantWrongCompany, TaskNotFound
 from domain.task.models import ChangeStatusTaskDTO, CreateTaskDTO, TaskDTO, UpdateTaskDTO
 from domain.token.models import MemberRoles, TokenDTO
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi.responses import JSONResponse, Response
 from usecases.task.change_status.abstract import AbstractChangeStatusTaskUseCase
 from usecases.task.create.abstract import AbstractCreateTaskUseCase
@@ -31,6 +32,7 @@ async def create_task(
     _request: Request,
     company_id: UUID,
     payload: CreateTaskSchema,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key", min_length=1, max_length=255),
     token: TokenDTO = Depends(require_company_role(min_role=MemberRoles.ADMIN)),
     usecase: AbstractCreateTaskUseCase = Depends(create_task_use_case),
 ) -> JSONResponse:
@@ -47,7 +49,11 @@ async def create_task(
     )
 
     try:
-        task = await usecase.execute(dto=dto)
+        response = await usecase.execute(dto=dto, idempotency_key=idempotency_key)
+    except IdempotencyConflict:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Idempotency key was used with another body"
+        ) from None
     except ParticipantNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
     except ParticipantInactive as exc:
@@ -55,9 +61,11 @@ async def create_task(
     except ParticipantWrongCompany as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from None
 
+    dto = response.body
+
     return JSONResponse(
-        _to_schema(task, watcher_ids=payload.watcher_ids, assignee_ids=payload.assignee_ids).model_dump(mode="json"),
-        status_code=status.HTTP_201_CREATED,
+        _to_schema(dto=dto.task, watcher_ids=dto.watcher_ids, assignee_ids=dto.assignee_ids).model_dump(mode="json"),
+        status_code=response.status_code,
     )
 
 

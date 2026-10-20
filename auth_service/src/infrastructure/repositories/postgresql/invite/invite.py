@@ -85,6 +85,9 @@ class PostgreSQLInviteRepository(AbstractInviteRepository):
         result = await self._session.execute(stmt)
         invite = result.scalar_one_or_none()
 
+        if invite is None:
+            return None
+
         return self._to_domain(invite)
 
     async def get_by_account_id(self, account_id: uuid.UUID) -> InviteDTO | None:

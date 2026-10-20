@@ -12,6 +12,7 @@ TOPIC_EVENT_TYPE = {
     OutboxEventType.COMPANY_CREATED: "auth.company.events",
     OutboxEventType.EMPLOYEE_CREATED: "auth.employee.events",
     OutboxEventType.EMPLOYEE_REGISTERED: "auth.employee.events",
+    OutboxEventType.EMPLOYEE_EMAIL_CHANGED: "auth.employee.events",
     OutboxEventType.EMPLOYEE_ACTIVATED: "auth.employee.events",
     OutboxEventType.EMPLOYEE_REGISTRATION_FAILED: "auth.employee.events",
     OutboxEventType.REGISTRATION_ORG_PROVISION: "registration.org.commands",

@@ -54,7 +54,11 @@ class PostgreSQLRegistrationSagaRepository(AbstractRegistrationSagaRepository):
         return self._to_domain(saga)
 
     async def update_status(
-        self, saga_id: uuid.UUID, status: RegistrationStatus, deadline_at: datetime | None, last_error: str | None = None
+        self,
+        saga_id: uuid.UUID,
+        status: RegistrationStatus,
+        deadline_at: datetime | None,
+        last_error: str | None = None,
     ) -> RegistrationSagaDTO:
         stmt = select(RegistrationSagaModel).where(RegistrationSagaModel.id == saga_id)
         result = await self._session.execute(stmt)

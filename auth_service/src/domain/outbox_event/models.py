@@ -8,6 +8,7 @@ class OutboxEventType(enum.StrEnum):
     COMPANY_CREATED = "company.created"
     EMPLOYEE_CREATED = "employee.created"
     EMPLOYEE_REGISTERED = "employee.registered"
+    EMPLOYEE_EMAIL_CHANGED = "employee.email.changed"
     EMPLOYEE_REGISTRATION_FAILED = "employee.registration.failed"
     EMPLOYEE_ACTIVATED = "employee.activated"
 

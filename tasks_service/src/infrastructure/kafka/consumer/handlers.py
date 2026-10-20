@@ -134,7 +134,7 @@ async def handle_employee_registration_failed(event: EventEnvelopeDTO, uow: Post
     await uow.users_replica.deactivate(
         users_replica_id=UUID(event.payload["user_id"]),
         company_id=UUID(event.payload["company_id"]),
-        last_event_at=event.occurred_at
+        last_event_at=event.occurred_at,
     )
 
 

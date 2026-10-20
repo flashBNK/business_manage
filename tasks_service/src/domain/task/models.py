@@ -9,7 +9,7 @@ from infrastructure.databases.postgresql.models.task import TaskStatus
 class CreateTaskDTO:
     title: str
     description: str
-    deadline: datetime
+    deadline: datetime | None
     responsible_id: UUID
     author_id: UUID
     company_id: UUID
@@ -27,7 +27,7 @@ class TaskDTO:
     author_id: UUID
     responsible_id: UUID
     company_id: UUID
-    deadline: datetime
+    deadline: datetime | None
     estimated_minutes: int
     deleted_at: datetime | None = None
 

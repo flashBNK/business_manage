@@ -14,5 +14,4 @@ class AbstractUsersReplicaRepository(AbstractRepository[UsersReplicaDTO, UUID, C
         raise UsersReplicaNotFound
 
     @abstractmethod
-    async def deactivate(self, users_replica_id: UUID, company_id: UUID, last_event_at: datetime) -> None:
-        ...
+    async def deactivate(self, users_replica_id: UUID, company_id: UUID, last_event_at: datetime) -> None: ...

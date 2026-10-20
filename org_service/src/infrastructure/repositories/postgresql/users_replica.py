@@ -81,7 +81,6 @@ class PostgreSQLUsersReplicaRepository(AbstractUsersReplicaRepository):
 
         return self._to_domain(users_replica)
 
-
     async def deactivate(self, users_replica_id: UUID, company_id: UUID, last_event_at: datetime) -> None:
         stmt = (
             update(UsersReplicaModel)
