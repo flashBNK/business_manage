@@ -83,31 +83,16 @@ async def test_registration_saga_success(client, session, admin, org_client, tas
 
     registration_completed = await session.scalar(
         select(OutboxEvent).where(
-            OutboxEvent.event_type == "registration.completed", OutboxEvent.aggregate_id == saga.id
+            OutboxEvent.event_type == "registration.completed",
+            OutboxEvent.aggregate_id == saga.id,
         )
     )
 
     assert registration_completed is not None
 
-    async with PostgreSQLAuthUnitOfWork(session=session) as uow:
-        await handle_registration_completed(
-            event=EventEnvelopeDTO.from_dict(
-                {
-                    "event_id": str(registration_completed.event_id),
-                    "event_type": registration_completed.event_type,
-                    "schema_version": registration_completed.schema_version,
-                    "aggregate_id": str(registration_completed.aggregate_id),
-                    "correlation_id": str(registration_completed.correlation_id),
-                    "causation_id": str(registration_completed.causation_id),
-                    "producer": registration_completed.producer,
-                    "occurred_at": registration_completed.occurred_at.isoformat(),
-                    "payload": registration_completed.payload,
-                }
-            ),
-            uow=uow,
-        )
-
-    saga = await session.scalar(select(RegistrationSaga).where(RegistrationSaga.user_id == employee["user_id"]))
+    saga = await session.scalar(
+        select(RegistrationSaga).where(RegistrationSaga.user_id == employee["user_id"])
+    )
 
     assert saga is not None
     assert saga.status == RegistrationStatus.COMPLETED

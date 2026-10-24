@@ -53,3 +53,16 @@ class UpdateTaskDTO:
 @dataclass(slots=True)
 class ChangeStatusTaskDTO:
     status: TaskStatus
+
+
+STATUS_TRANSITIONS = {
+    TaskStatus.TODO: {TaskStatus.IN_PROGRESS, TaskStatus.CANCELLED},
+    TaskStatus.IN_PROGRESS: {TaskStatus.IN_REVIEW, TaskStatus.CANCELLED},
+    TaskStatus.IN_REVIEW: {
+        TaskStatus.IN_PROGRESS,
+        TaskStatus.DONE,
+        TaskStatus.CANCELLED,
+    },
+    TaskStatus.DONE: set(),
+    TaskStatus.CANCELLED: set(),
+}

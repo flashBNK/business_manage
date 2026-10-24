@@ -1,215 +1,73 @@
-from datetime import UTC, datetime, timedelta
-from uuid import UUID
-
 from domain.kafka.models import EventEnvelopeDTO
-from domain.member.exceptions import MembersNotFound
-from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
-from domain.registration_saga.models import CreateRegistrationSagaDTO
-from infrastructure.databases.postgresql.models.registration_saga import RegistrationStatus
 from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
-from usecases.registration.compensate.implementation import PostgreSQLCompensateRegistrationUseCase
-
-CONSUMER_NAME = "auth_service"
+from usecases.registration.saga.implementation import PostgreSQLRegistrationSagaUseCase
 
 
 async def handle_employee_registered(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOfWork) -> None:
-    payload = event.payload
+    usecase = PostgreSQLRegistrationSagaUseCase(uow=uow)
 
-    saga = await uow.registration_saga.get_by_correlation_id(correlation_id=event.correlation_id)
-
-    if saga is not None:
-        return
-
-    saga = await uow.registration_saga.create(
-        CreateRegistrationSagaDTO(
-            user_id=UUID(payload["user_id"]),
-            company_id=UUID(payload["company_id"]),
-            invite_id=UUID(payload["invite_id"]),
-            correlation_id=event.correlation_id,
-            deadline_at=datetime.now(UTC) + timedelta(minutes=1),
-        )
-    )
-
-    await uow.outbox_event.create(
-        CreateOutboxEventDTO(
-            event_type=OutboxEventType.REGISTRATION_ORG_PROVISION,
-            aggregate_id=saga.id,
-            correlation_id=saga.correlation_id,
-            causation_id=event.event_id,
-            payload={
-                "saga_id": str(saga.id),
-                "user_id": payload["user_id"],
-                "company_id": payload["company_id"],
-                "invite_id": payload["invite_id"],
-                "struct_adm_id": payload["struct_adm_id"],
-                "position_id": payload["position_id"],
-                "first_name": payload["first_name"],
-                "last_name": payload["last_name"],
-            },
-        )
+    await usecase.start(
+        payload=event.payload,
+        correlation_id=event.correlation_id,
+        causation_id=event.event_id,
     )
 
 
 async def handle_org_completed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOfWork) -> None:
-    saga = await uow.registration_saga.get(saga_id=event.aggregate_id)
+    usecase = PostgreSQLRegistrationSagaUseCase(uow=uow)
 
-    if saga is None:
-        return
-
-    if saga.correlation_id != event.correlation_id or saga.status != RegistrationStatus.STARTED:
-        return
-
-    await uow.registration_saga.update_status(
-        saga_id=saga.id, status=RegistrationStatus.ORG_COMPLETED, deadline_at=datetime.now(UTC) + timedelta(minutes=1)
-    )
-
-    await uow.outbox_event.create(
-        CreateOutboxEventDTO(
-            event_type=OutboxEventType.REGISTRATION_TASKS_PROVISION,
-            aggregate_id=saga.id,
-            correlation_id=saga.correlation_id,
-            causation_id=event.event_id,
-            payload={
-                "saga_id": str(saga.id),
-                "user_id": str(saga.user_id),
-                "company_id": str(saga.company_id),
-                "invite_id": str(saga.invite_id),
-                "first_name": event.payload["first_name"],
-                "last_name": event.payload["last_name"],
-                "struct_adm_id": event.payload["struct_adm_id"],
-                "position_id": event.payload["position_id"],
-            },
-        )
+    await usecase.org_completed(
+        saga_id=event.aggregate_id,
+        correlation_id=event.correlation_id,
+        causation_id=event.event_id,
+        payload=event.payload,
     )
 
 
 async def handle_tasks_completed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOfWork) -> None:
-    saga = await uow.registration_saga.get(saga_id=event.aggregate_id)
+    usecase = PostgreSQLRegistrationSagaUseCase(uow=uow)
 
-    if saga is None:
-        return
-
-    if saga.correlation_id != event.correlation_id or saga.status != RegistrationStatus.ORG_COMPLETED:
-        return
-
-    await uow.registration_saga.update_status(
-        saga_id=saga.id,
-        status=RegistrationStatus.TASKS_COMPLETED,
-        deadline_at=datetime.now(UTC) + timedelta(minutes=1),
-    )
-
-    await uow.outbox_event.create(
-        CreateOutboxEventDTO(
-            event_type=OutboxEventType.REGISTRATION_COMPLETED,
-            aggregate_id=saga.id,
-            correlation_id=saga.correlation_id,
-            causation_id=event.event_id,
-            payload={
-                "saga_id": str(saga.id),
-                "user_id": str(saga.user_id),
-                "company_id": str(saga.company_id),
-            },
-        )
-    )
-
-
-async def handle_registration_completed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOfWork) -> None:
-    saga = await uow.registration_saga.get(saga_id=event.aggregate_id)
-
-    if saga is None:
-        return
-
-    if saga.correlation_id != event.correlation_id or saga.status != RegistrationStatus.TASKS_COMPLETED:
-        return
-
-    member = await uow.member.get_by_invite_id(invite_id=saga.invite_id)
-    if not member:
-        raise MembersNotFound
-
-    user = await uow.user.get(user_id=saga.user_id)
-
-    await uow.member.activation_shift(member_id=member.id, flag=True)
-
-    await uow.registration_saga.update_status(saga_id=saga.id, status=RegistrationStatus.COMPLETED, deadline_at=None)
-
-    await uow.outbox_event.create(
-        CreateOutboxEventDTO(
-            event_type=OutboxEventType.EMPLOYEE_ACTIVATED,
-            aggregate_id=saga.user_id,
-            correlation_id=saga.correlation_id,
-            causation_id=event.event_id,
-            payload={
-                "user_id": str(saga.user_id),
-                "company_id": str(saga.company_id),
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "is_active": True,
-            },
-        )
+    await usecase.tasks_completed(
+        saga_id=event.aggregate_id,
+        correlation_id=event.correlation_id,
+        causation_id=event.event_id,
     )
 
 
 async def handle_tasks_failed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOfWork) -> None:
-    saga = await uow.registration_saga.get(saga_id=event.aggregate_id)
+    usecase = PostgreSQLRegistrationSagaUseCase(uow=uow)
 
-    if saga is None:
-        return
-
-    if saga.correlation_id != event.correlation_id or saga.status != RegistrationStatus.ORG_COMPLETED:
-        return
-
-    await uow.registration_saga.update_status(
-        saga_id=saga.id,
-        status=RegistrationStatus.COMPENSATING,
-        deadline_at=datetime.now(UTC) + timedelta(minutes=1),
-        last_error=event.payload.get("reason") or "tasks step failed",
-    )
-
-    await uow.outbox_event.create(
-        CreateOutboxEventDTO(
-            event_type=OutboxEventType.REGISTRATION_ORG_COMPENSATE,
-            aggregate_id=saga.id,
-            correlation_id=saga.correlation_id,
-            causation_id=event.event_id,
-            payload={
-                "saga_id": str(saga.id),
-                "user_id": str(saga.user_id),
-                "company_id": str(saga.company_id),
-                "struct_adm_id": event.payload["struct_adm_id"],
-                "position_id": event.payload["position_id"],
-            },
-        )
+    await usecase.tasks_failed(
+        saga_id=event.aggregate_id,
+        correlation_id=event.correlation_id,
+        causation_id=event.event_id,
+        payload=event.payload,
     )
 
 
 async def handle_org_compensated(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOfWork) -> None:
-    saga = await uow.registration_saga.get(saga_id=event.aggregate_id)
+    usecase = PostgreSQLRegistrationSagaUseCase(uow=uow)
 
-    if saga is None:
-        return
-
-    if saga.correlation_id != event.correlation_id or saga.status != RegistrationStatus.COMPENSATING:
-        return
-
-    usecase = PostgreSQLCompensateRegistrationUseCase(uow=uow)
-
-    await usecase.execute(saga=saga, reason=saga.last_error or "tasks step failed", causation_id=event.event_id)
+    await usecase.org_compensated(
+        saga_id=event.aggregate_id,
+        correlation_id=event.correlation_id,
+        causation_id=event.event_id,
+    )
 
 
 async def handle_org_failed(event: EventEnvelopeDTO, uow: PostgreSQLAuthUnitOfWork) -> None:
-    saga = await uow.registration_saga.get(saga_id=event.aggregate_id)
+    usecase = PostgreSQLRegistrationSagaUseCase(uow=uow)
 
-    if saga is None:
-        return
-
-    if saga.correlation_id != event.correlation_id or saga.status != RegistrationStatus.STARTED:
-        return
-
-    usecase = PostgreSQLCompensateRegistrationUseCase(uow=uow)
-
-    await usecase.execute(
-        saga=saga, reason=event.payload.get("reason") or "org step failed", causation_id=event.event_id
+    await usecase.org_failed(
+        saga_id=event.aggregate_id,
+        correlation_id=event.correlation_id,
+        causation_id=event.event_id,
+        payload=event.payload,
     )
+
+
+async def handle_registration_completed(event, uow) -> None:
+    return
 
 
 async def handle_employee_created(event, uow) -> None:

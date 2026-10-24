@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 import pytest
 from domain.token.models import MemberRoles
 from infrastructure.databases.postgresql.models import OutboxEvent
-from infrastructure.databases.postgresql.models.task import TaskStatus
+from infrastructure.databases.postgresql.models.task import Task, TaskStatus
 from sqlalchemy import select
 
 from ..fixtures.factories import create_user
@@ -52,3 +52,38 @@ async def test_change_task_status(client, session, set_auth_token):
     assert event is not None
     assert event.payload["old_status"] == "todo"
     assert event.payload["new_status"] == "in_progress"
+
+
+@pytest.mark.asyncio
+async def test_repeating_current_status_does_not_create_event(client, session, set_auth_token):
+    company_id = uuid4()
+    author = await create_user(session, company_id)
+    task = Task(
+        title="Task",
+        description="Description",
+        author_id=author.id,
+        responsible_id=author.id,
+        company_id=company_id,
+        status=TaskStatus.TODO,
+        estimated_minutes=30,
+    )
+    session.add(task)
+    await session.commit()
+
+    set_auth_token(company_id, role=MemberRoles.ADMIN, user_id=author.id)
+
+    response = await client.patch(
+        f"/api/v1/companies/{company_id}/tasks/{task.id}/change_status",
+        json={"status": TaskStatus.TODO.value},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == TaskStatus.TODO.value
+
+    event = await session.scalar(
+        select(OutboxEvent).where(
+            OutboxEvent.aggregate_id == task.id,
+            OutboxEvent.event_type == "task.status_changed",
+        )
+    )
+    assert event is None

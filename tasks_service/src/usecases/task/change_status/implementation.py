@@ -1,8 +1,8 @@
 from uuid import UUID, uuid4
 
 from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
-from domain.task.exceptions import TaskNotFound
-from domain.task.models import ChangeStatusTaskDTO, ResponseTaskDTO
+from domain.task.exceptions import TaskNotFound, InvalidTaskStatusTransition
+from domain.task.models import ChangeStatusTaskDTO, ResponseTaskDTO, STATUS_TRANSITIONS
 from infrastructure.repositories.postgresql.uow import PostgreSQLTasksUnitOfWork
 from logger import get_logger
 
@@ -24,7 +24,11 @@ class PostgreSQLChangeStatusTaskUseCase(AbstractChangeStatusTaskUseCase):
 
             old_status = task.status
 
-            task = await uow.task.change_status(dto=dto, task_id=task_id)
+            if old_status != dto.status:
+                if dto.status not in STATUS_TRANSITIONS[old_status]:
+                    raise InvalidTaskStatusTransition
+
+                task = await uow.task.change_status(dto=dto, task_id=task_id)
 
             assignees = await uow.task_assignees.list_by_task(task_id=task.id)
             watchers = await uow.task_watcher.list_by_task(task_id=task.id)
@@ -35,16 +39,17 @@ class PostgreSQLChangeStatusTaskUseCase(AbstractChangeStatusTaskUseCase):
                 watcher_ids=[w.user_id for w in watchers],
             )
 
-            await uow.outbox_event.create(
-                CreateOutboxEventDTO(
-                    event_type=OutboxEventType.TASK_STATUS_CHANGED,
-                    aggregate_id=task.id,
-                    correlation_id=correlation_id,
-                    payload={
-                        "old_status": old_status,
-                        "new_status": task.status,
-                    },
+            if old_status != task.status:
+                await uow.outbox_event.create(
+                    CreateOutboxEventDTO(
+                        event_type=OutboxEventType.TASK_STATUS_CHANGED,
+                        aggregate_id=task.id,
+                        correlation_id=correlation_id,
+                        payload={
+                            "old_status": old_status,
+                            "new_status": task.status,
+                        },
+                    )
                 )
-            )
 
             return response

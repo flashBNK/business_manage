@@ -16,3 +16,8 @@ class ParticipantWrongCompany(Exception):
 class TaskNotFound(Exception):
     def __init__(self):
         super().__init__("Task not found.")
+
+
+class InvalidTaskStatusTransition(Exception):
+    def __init__(self):
+        super().__init__("Invalid task status transition.")

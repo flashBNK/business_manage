@@ -1,7 +1,8 @@
 from uuid import UUID
 
 from domain.idempotency.exceptions import IdempotencyConflict
-from domain.task.exceptions import ParticipantInactive, ParticipantNotFound, ParticipantWrongCompany, TaskNotFound
+from domain.task.exceptions import ParticipantInactive, ParticipantNotFound, ParticipantWrongCompany, TaskNotFound, \
+    InvalidTaskStatusTransition
 from domain.task.models import ChangeStatusTaskDTO, CreateTaskDTO, TaskDTO, UpdateTaskDTO
 from domain.token.models import MemberRoles, TokenDTO
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
@@ -125,7 +126,7 @@ async def update_task(
     )
     try:
         task = await usecase.execute(dto=dto, company_id=company_id, task_id=task_id)
-    except ParticipantNotFound as exc:
+    except (ParticipantNotFound, TaskNotFound) as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
     except ParticipantInactive as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from None
@@ -156,6 +157,8 @@ async def change_status_task(
         task = await usecase.execute(dto=dto, company_id=company_id, task_id=task_id)
     except TaskNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
+    except InvalidTaskStatusTransition as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from None
 
     return JSONResponse(
         _to_schema(dto=task.task, watcher_ids=task.watcher_ids, assignee_ids=task.assignee_ids).model_dump(
