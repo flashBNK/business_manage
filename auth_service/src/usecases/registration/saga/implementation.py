@@ -13,7 +13,6 @@ class PostgreSQLRegistrationSagaUseCase:
     def __init__(self, uow: PostgreSQLAuthUnitOfWork):
         self._uow = uow
 
-
     async def tasks_completed(self, saga_id: UUID, correlation_id: UUID, causation_id: UUID) -> None:
         uow = self._uow
         saga = await uow.registration_saga.get(saga_id=saga_id)
@@ -68,7 +67,6 @@ class PostgreSQLRegistrationSagaUseCase:
             )
         )
 
-
     async def start(self, payload: dict, correlation_id: UUID, causation_id: UUID) -> None:
         uow = self._uow
         saga = await uow.registration_saga.get_by_correlation_id(correlation_id=correlation_id)
@@ -85,7 +83,6 @@ class PostgreSQLRegistrationSagaUseCase:
                 deadline_at=datetime.now(UTC) + timedelta(minutes=1),
             )
         )
-
 
         await uow.outbox_event.create(
             CreateOutboxEventDTO(
@@ -105,7 +102,6 @@ class PostgreSQLRegistrationSagaUseCase:
                 },
             )
         )
-
 
     async def org_completed(self, saga_id: UUID, correlation_id: UUID, causation_id: UUID, payload: dict) -> None:
         uow = self._uow
@@ -142,7 +138,6 @@ class PostgreSQLRegistrationSagaUseCase:
             )
         )
 
-
     async def tasks_failed(self, saga_id: UUID, correlation_id: UUID, causation_id: UUID, payload: dict) -> None:
         uow = self._uow
         saga = await uow.registration_saga.get(saga_id=saga_id)
@@ -176,7 +171,6 @@ class PostgreSQLRegistrationSagaUseCase:
             )
         )
 
-
     async def org_compensated(self, saga_id: UUID, correlation_id: UUID, causation_id: UUID) -> None:
         uow = self._uow
         saga = await uow.registration_saga.get(saga_id=saga_id)
@@ -192,7 +186,6 @@ class PostgreSQLRegistrationSagaUseCase:
             reason=saga.last_error or "tasks step failed",
             causation_id=causation_id,
         )
-
 
     async def org_failed(self, saga_id: UUID, correlation_id: UUID, causation_id: UUID, payload: dict) -> None:
         uow = self._uow

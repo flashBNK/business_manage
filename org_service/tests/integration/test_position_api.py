@@ -7,7 +7,10 @@ from domain.token.models import MemberRoles, MembershipAdmission, TokenDTO
 from infrastructure.databases.postgresql.models import Position
 from sqlalchemy import select
 
-from ..fixtures.db import create_company
+from ..fixtures.db import (
+    create_company,
+    create_position,
+)
 
 
 @pytest.mark.asyncio
@@ -83,3 +86,30 @@ async def test_position_lifecycle(client, session, set_auth_token):
 
     position = await session.scalar(select(Position).where(Position.id == position_id))
     assert position is None
+
+
+@pytest.mark.asyncio
+async def test_list_positions_is_paginated(client, session, set_auth_token):
+    company = await create_company(session)
+    set_auth_token(company.id)
+
+    for name in ["Architect", "Backend", "DevOps", "QA"]:
+        await create_position(session, company_id=company.id, name=name)
+
+    response = await client.get(f"/api/v1/companies/{company.id}/positions?limit=2&offset=1")
+
+    assert response.status_code == 200
+
+    page = response.json()
+    assert page["total"] == 4
+    assert page["limit"] == 2
+    assert page["offset"] == 1
+    assert [position["name"] for position in page["positions"]] == ["Backend", "DevOps"]
+
+    response = await client.get(f"/api/v1/companies/{company.id}/positions?limit=2&offset=4")
+
+    assert response.status_code == 200
+    assert response.json()["total"] == 4
+    assert response.json()["positions"] == []
+
+    assert (await client.get(f"/api/v1/companies/{company.id}/positions?limit=0")).status_code == 422

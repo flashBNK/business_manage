@@ -5,7 +5,7 @@ from domain.task.exceptions import TaskNotFound
 from domain.task.models import ChangeStatusTaskDTO, CreateTaskDTO, TaskDTO, UpdateTaskDTO
 from domain.task.repository import AbstractTaskRepository
 from infrastructure.databases.postgresql.models.task import Task as TaskModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -49,15 +49,26 @@ class PostgreSQLTaskRepository(AbstractTaskRepository):
 
         return self._to_domain(task)
 
-    async def list_by_company(self, company_id: UUID) -> list[TaskDTO]:
-        stmt = self._active_query().where(TaskModel.company_id == company_id)
+    async def list_by_company(self, company_id: UUID, limit: int, offset: int) -> tuple[list[TaskDTO], int]:
+        total_stmt = (
+            select(func.count())
+            .select_from(TaskModel)
+            .where(TaskModel.company_id == company_id, TaskModel.deleted_at.is_(None))
+        )
+        total_result = await self._session.execute(total_stmt)
+        total = total_result.scalar_one()
+
+        stmt = (
+            self._active_query()
+            .where(TaskModel.company_id == company_id)
+            .order_by(TaskModel.created_at.desc(), TaskModel.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
         result = await self._session.execute(stmt)
         tasks = result.scalars().all()
 
-        if not tasks:
-            return []
-
-        return [self._to_domain(task) for task in tasks]
+        return [self._to_domain(task) for task in tasks], total
 
     async def update(self, dto: UpdateTaskDTO, task_id: UUID) -> TaskDTO:
         stmt = self._active_query().where(TaskModel.id == task_id)

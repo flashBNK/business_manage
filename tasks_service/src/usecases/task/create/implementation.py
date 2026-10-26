@@ -80,11 +80,7 @@ class PostgreSQLCreateTaskUseCase(AbstractCreateTaskUseCase):
                 )
             )
 
-            body = ResponseTaskDTO(
-                task=task,
-                watcher_ids=dto.watcher_ids,
-                assignee_ids=dto.assignee_ids
-            )
+            body = ResponseTaskDTO(task=task, watcher_ids=dto.watcher_ids, assignee_ids=dto.assignee_ids)
             response = SavedResponseDTO(status_code=201, body=body)
             TypeAdapter(ResponseTaskDTO).dump_python(response.body, mode="json")
 

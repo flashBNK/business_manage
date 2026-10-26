@@ -24,17 +24,18 @@ class PostgreSQLUpdateTaskUseCase(AbstractUpdateTaskUseCase):
             if not task or task.company_id != company_id:
                 raise TaskNotFound
 
-            if dto.responsible_id and dto.responsible_id != task.responsible_id:
-                await check_participant(user_id=dto.responsible_id, company_id=company_id, uow=uow)
+            participant_ids: list[UUID] = []
 
-            if dto.watcher_ids:
-                for user_id in {*dto.watcher_ids}:
-                    await check_participant(user_id=user_id, company_id=company_id, uow=uow)
+            if dto.responsible_id is not None and dto.responsible_id != task.responsible_id:
+                participant_ids.append(dto.responsible_id)
 
-            if dto.assignee_ids:
-                for user_id in {*dto.assignee_ids}:
-                    await check_participant(user_id=user_id, company_id=company_id, uow=uow)
+            if dto.watcher_ids is not None:
+                participant_ids.extend(dto.watcher_ids)
 
+            if dto.assignee_ids is not None:
+                participant_ids.extend(dto.assignee_ids)
+
+            await check_participant(user_ids=participant_ids, company_id=company_id, uow=uow)
             task = await uow.task.update(dto=dto, task_id=task_id)
 
             if dto.watcher_ids is not None:

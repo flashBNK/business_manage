@@ -30,12 +30,14 @@ class EmployeePositionSchema(BaseModel):
     role: Role
 
 
-class UpdateUsersPositionSchema(BaseModel):
-    struct_adm_id: UUID | None = None
-    position_id: UUID | None = None
-
-
 class UsersPositionListSchema(BaseModel):
     struct_adm: StructAdmSchema
     total: int
     employees: list[EmployeePositionSchema]
+    limit: int
+    offset: int
+
+
+class UpdateUsersPositionSchema(BaseModel):
+    struct_adm_id: UUID | None = None
+    position_id: UUID | None = None

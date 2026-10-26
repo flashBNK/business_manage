@@ -81,6 +81,16 @@ class PostgreSQLUsersReplicaRepository(AbstractUsersReplicaRepository):
 
         return self._to_domain(users_replica)
 
+    async def list_by_ids(self, user_ids: list[UUID]) -> list[UsersReplicaDTO]:
+        if not user_ids:
+            return []
+
+        stmt = select(UsersReplicaModel).where(UsersReplicaModel.id.in_(user_ids))
+        result = await self._session.execute(stmt)
+        users = result.scalars().all()
+
+        return [self._to_domain(user) for user in users]
+
     async def deactivate(self, users_replica_id: UUID, company_id: UUID, last_event_at: datetime) -> None:
         stmt = (
             update(UsersReplicaModel)

@@ -7,7 +7,6 @@ from infrastructure.databases.postgresql.models.registration_saga import Registr
 from infrastructure.kafka.consumer.handlers import (
     handle_employee_registered,
     handle_org_completed,
-    handle_registration_completed,
     handle_tasks_completed,
 )
 from infrastructure.repositories.postgresql.uow import PostgreSQLAuthUnitOfWork
@@ -90,9 +89,7 @@ async def test_registration_saga_success(client, session, admin, org_client, tas
 
     assert registration_completed is not None
 
-    saga = await session.scalar(
-        select(RegistrationSaga).where(RegistrationSaga.user_id == employee["user_id"])
-    )
+    saga = await session.scalar(select(RegistrationSaga).where(RegistrationSaga.user_id == employee["user_id"]))
 
     assert saga is not None
     assert saga.status == RegistrationStatus.COMPLETED

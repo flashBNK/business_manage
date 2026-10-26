@@ -3,7 +3,7 @@ from uuid import UUID
 from domain.position.models import CreatePositionDTO, PositionDTO, UpdatePositionDTO
 from domain.position.repository import AbstractPositionRepository
 from infrastructure.databases.postgresql.models.position import Position as PositionModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -40,15 +40,22 @@ class PostgreSQLPositionRepository(AbstractPositionRepository):
 
         return self._to_domain(position)
 
-    async def list(self, company_id: UUID) -> list[PositionDTO]:
-        stmt = select(PositionModel).where(PositionModel.company_id == company_id)
+    async def list_paginated(self, company_id: UUID, limit: int, offset: int) -> tuple[list[PositionDTO], int]:
+        total_stmt = select(func.count()).select_from(PositionModel).where(PositionModel.company_id == company_id)
+        total_result = await self._session.execute(total_stmt)
+        total = total_result.scalar_one()
+
+        stmt = (
+            select(PositionModel)
+            .where(PositionModel.company_id == company_id)
+            .order_by(PositionModel.name.asc(), PositionModel.id.asc())
+            .limit(limit)
+            .offset(offset)
+        )
         result = await self._session.execute(stmt)
         positions = result.scalars().all()
 
-        if not positions:
-            return []
-
-        return [self._to_domain(position) for position in positions]
+        return [self._to_domain(position) for position in positions], total or 0
 
     async def update(self, position_id: UUID, dto=UpdatePositionDTO) -> PositionDTO | None:
         stmt = select(PositionModel).where(PositionModel.id == position_id)

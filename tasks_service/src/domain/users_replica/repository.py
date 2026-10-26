@@ -15,3 +15,6 @@ class AbstractUsersReplicaRepository(AbstractRepository[UsersReplicaDTO, UUID, C
 
     @abstractmethod
     async def deactivate(self, users_replica_id: UUID, company_id: UUID, last_event_at: datetime) -> None: ...
+
+    @abstractmethod
+    async def list_by_ids(self, user_ids: list[UUID]) -> list[UsersReplicaDTO]: ...

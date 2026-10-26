@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from domain.task.models import ResponseTaskDTO
+from domain.task.models import ListResponseTaskDTO
 
 
 class AbstractListTaskUseCase(ABC):
     @abstractmethod
-    async def execute(self, company_id: UUID) -> list[ResponseTaskDTO]: ...
+    async def execute(self, company_id: UUID, limit: int, offset: int) -> ListResponseTaskDTO: ...

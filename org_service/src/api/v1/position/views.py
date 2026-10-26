@@ -4,7 +4,7 @@ from domain.position.exceptions import InvalidRequestPosition, PositionNotFound
 from domain.position.models import CreatePositionDTO, PositionDTO, UpdatePositionDTO
 from domain.token.models import MemberRoles, TokenDTO
 from domain.users_position.exceptions import UsersPositionIsUsed
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, Response
 from uscases.position.create.abstract import AbstractCreatePositionUseCase
 from uscases.position.delete.abstract import AbstractDeletePositionUseCase
@@ -47,17 +47,18 @@ async def create_position(
 async def list_positions(
     _request: Request,
     company_id: UUID,
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     usecase: AbstractListPositionUseCase = Depends(list_position_use_case),
     _token: TokenDTO = Depends(require_company_role(MemberRoles.MEMBER)),
 ) -> JSONResponse:
-    try:
-        positions = await usecase.execute(company_id=company_id)
-    except PositionNotFound as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
+    positions_page = await usecase.execute(company_id=company_id, limit=limit, offset=offset)
 
     content = PositionListSchema(
-        total=len(positions),
-        positions=[_to_schema(position).model_dump(mode="json") for position in positions],
+        total=positions_page.total,
+        positions=[_to_schema(position).model_dump(mode="json") for position in positions_page.positions],
+        limit=positions_page.limit,
+        offset=positions_page.offset,
     )
 
     return JSONResponse(content.model_dump(mode="json"), status_code=status.HTTP_200_OK)

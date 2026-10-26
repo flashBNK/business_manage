@@ -41,3 +41,15 @@ class AbstractUsersPositionRepository(AbstractRepository[UsersPositionDTO, UUID,
     @abstractmethod
     async def list_by_position(self, company_id: UUID, position_id: UUID) -> list[EmployeePositionDTO]:
         raise InvalidRequestUsersPosition
+
+    @abstractmethod
+    async def list_paginated_by_struct_adm(
+        self,
+        struct_adm_id: UUID,
+        company_id: UUID,
+        struct_adm_path: str,
+        include_children: bool,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[EmployeePositionDTO], int]:
+        raise InvalidRequestUsersPosition

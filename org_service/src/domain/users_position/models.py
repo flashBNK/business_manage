@@ -33,6 +33,14 @@ class EmployeePositionDTO:
 
 
 @dataclass(slots=True)
+class ListResponseEmployeePositionDTO:
+    total: int
+    employees: list[EmployeePositionDTO]
+    limit: int
+    offset: int
+
+
+@dataclass(slots=True)
 class UpdateUsersPositionDTO:
     user_id: UUID
     old_struct_adm_id: UUID

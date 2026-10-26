@@ -1,8 +1,8 @@
 from uuid import UUID, uuid4
 
 from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventType
-from domain.task.exceptions import TaskNotFound, InvalidTaskStatusTransition
-from domain.task.models import ChangeStatusTaskDTO, ResponseTaskDTO, STATUS_TRANSITIONS
+from domain.task.exceptions import InvalidTaskStatusTransition, TaskNotFound
+from domain.task.models import STATUS_TRANSITIONS, ChangeStatusTaskDTO, ResponseTaskDTO
 from infrastructure.repositories.postgresql.uow import PostgreSQLTasksUnitOfWork
 from logger import get_logger
 

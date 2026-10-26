@@ -13,6 +13,9 @@ class AbstractTaskWatcherRepository(AbstractRepository[TaskWatcherDTO, UUID, Cre
         raise WatcherNotFound
 
     @abstractmethod
+    async def list_by_tasks(self, task_ids: list[UUID]) -> list[TaskWatcherDTO]: ...
+
+    @abstractmethod
     async def delete_by_list(self, watcher_ids: list[UUID], task_id: UUID) -> None:
         raise WatcherNotFound
 

@@ -32,6 +32,8 @@ class CreateTaskSchema(BaseModel):
 
 class ListTaskSchema(BaseModel):
     total: int
+    limit: int = 20
+    offset: int = 0
     tasks: list[TaskSchema]
 
 

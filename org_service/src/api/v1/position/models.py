@@ -23,3 +23,5 @@ class PositionSchema(BaseModel):
 class PositionListSchema(BaseModel):
     total: int
     positions: list[PositionSchema]
+    limit: int
+    offset: int

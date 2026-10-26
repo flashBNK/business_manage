@@ -33,9 +33,7 @@ async def test_registration_finishes_after_tasks_completed(client, session, admi
     session.add(saga)
     await session.commit()
     saga_id = saga.id
-    event = EventEnvelopeDTO.from_dict(
-        make_event("registration.tasks.completed", saga_id, saga.correlation_id, {})
-    )
+    event = EventEnvelopeDTO.from_dict(make_event("registration.tasks.completed", saga_id, saga.correlation_id, {}))
 
     async with PostgreSQLAuthUnitOfWork(session=session) as uow:
         await handle_tasks_completed(event=event, uow=uow)

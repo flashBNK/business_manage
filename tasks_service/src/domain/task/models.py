@@ -40,6 +40,14 @@ class ResponseTaskDTO:
 
 
 @dataclass(slots=True)
+class ListResponseTaskDTO:
+    total: int
+    tasks: list[ResponseTaskDTO]
+    limit: int = 20
+    offset: int = 0
+
+
+@dataclass(slots=True)
 class UpdateTaskDTO:
     title: str | None = None
     description: str | None = None

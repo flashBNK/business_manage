@@ -17,7 +17,7 @@ from infrastructure.databases.postgresql.models.users_position import Role
 from infrastructure.databases.postgresql.models.users_position import UsersPosition as UsersPositionModel
 from infrastructure.databases.postgresql.models.users_replica import UsersReplica as UsersReplicaModel
 from infrastructure.repositories.postgresql.struct_adm import LtreeSQLType
-from sqlalchemy import cast, literal, select
+from sqlalchemy import cast, func, literal, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -139,6 +139,74 @@ class PostgreSQLUsersPositionRepository(AbstractUsersPositionRepository):
         ]
 
         return employees
+
+    async def list_paginated_by_struct_adm(
+        self,
+        struct_adm_id: UUID,
+        company_id: UUID,
+        struct_adm_path: str,
+        include_children: bool,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[EmployeePositionDTO], int]:
+        filters = [
+            StructAdmModel.company_id == company_id,
+            UsersReplicaModel.company_id == company_id,
+        ]
+
+        if include_children:
+            struct_adm_path_expr = cast(literal(struct_adm_path), LtreeSQLType())
+            filters.append(StructAdmModel.path.op("<@")(struct_adm_path_expr))
+        else:
+            filters.append(StructAdmModel.id == struct_adm_id)
+
+        total_stmt = (
+            select(func.count())
+            .select_from(UsersPositionModel)
+            .join(UsersReplicaModel, UsersReplicaModel.id == UsersPositionModel.user_id)
+            .join(PositionModel, PositionModel.id == UsersPositionModel.position_id)
+            .join(StructAdmModel, StructAdmModel.id == UsersPositionModel.struct_adm_id)
+            .where(*filters)
+        )
+        result_total = await self._session.execute(total_stmt)
+        total = result_total.scalar_one()
+
+        stmt = (
+            select(
+                UsersReplicaModel.id.label("user_id"),
+                UsersReplicaModel.username,
+                PositionModel.id.label("position_id"),
+                PositionModel.name.label("position_name"),
+                UsersPositionModel.role,
+            )
+            .join(UsersReplicaModel, UsersReplicaModel.id == UsersPositionModel.user_id)
+            .join(PositionModel, PositionModel.id == UsersPositionModel.position_id)
+            .join(StructAdmModel, StructAdmModel.id == UsersPositionModel.struct_adm_id)
+            .where(*filters)
+            .order_by(
+                UsersReplicaModel.username.asc(),
+                UsersReplicaModel.id.asc(),
+                PositionModel.name.asc(),
+                PositionModel.id.asc(),
+                UsersPositionModel.struct_adm_id.asc(),
+            )
+            .limit(limit)
+            .offset(offset)
+        )
+        result = await self._session.execute(stmt)
+
+        employees = [
+            EmployeePositionDTO(
+                user_id=user_id,
+                username=username,
+                position_id=position_id,
+                position_name=position_name,
+                role=role,
+            )
+            for user_id, username, position_id, position_name, role in result.all()
+        ]
+
+        return employees, total or 0
 
     async def get(self, struct_adm_position_id: UUID) -> UsersPositionDTO | None:
         pass

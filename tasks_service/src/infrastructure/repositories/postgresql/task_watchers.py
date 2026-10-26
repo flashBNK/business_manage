@@ -38,6 +38,20 @@ class PostgreSQLTaskWatcherRepository(AbstractTaskWatcherRepository):
 
         return [self._to_domain(watcher) for watcher in watchers]
 
+    async def list_by_tasks(self, task_ids: list[UUID]) -> list[TaskWatcherDTO]:
+        if not task_ids:
+            return []
+
+        stmt = (
+            select(TaskWatchersModel)
+            .where(TaskWatchersModel.task_id.in_(task_ids))
+            .order_by(TaskWatchersModel.task_id, TaskWatchersModel.user_id)
+        )
+        result = await self._session.execute(stmt)
+        watchers = result.scalars().all()
+
+        return [self._to_domain(watcher) for watcher in watchers]
+
     async def delete_by_list(self, watcher_ids: list[UUID], task_id: UUID) -> None:
         stmt = delete(TaskWatchersModel).where(
             TaskWatchersModel.user_id.in_(watcher_ids), TaskWatchersModel.task_id == task_id

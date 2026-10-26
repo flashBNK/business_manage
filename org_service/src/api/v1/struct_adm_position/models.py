@@ -15,3 +15,5 @@ class StructAdmPositionSchema(CreateStructAdmPositionSchema):
 class StructAdmPositionListSchema(BaseModel):
     total: int
     positions: list[StructAdmPositionSchema]
+    limit: int
+    offset: int

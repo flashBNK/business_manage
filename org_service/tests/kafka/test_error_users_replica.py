@@ -35,4 +35,5 @@ async def test_employee_registration_failed_deletes_users_replica(session):
 
     user = await session.scalar(select(UsersReplica).where(UsersReplica.id == user_id))
 
-    assert user is None
+    assert user is not None
+    assert user.is_active is False

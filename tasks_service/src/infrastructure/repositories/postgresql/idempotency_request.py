@@ -1,12 +1,12 @@
-from pydantic import TypeAdapter
-
 from domain.idempotency.models import IdempotencyRequestDTO, SavedResponseDTO
+from domain.task.models import ResponseTaskDTO
+from infrastructure.databases.postgresql.models.idempotency_request import (
+    IdempotencyRequest as IdempotencyRequestModel,
+)
+from pydantic import TypeAdapter
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from infrastructure.databases.postgresql.models.idempotency_request import IdempotencyRequest as IdempotencyRequestModel
-
-from domain.task.models import ResponseTaskDTO
 
 
 class PostgreSQLIdempotencyRequestRepository:
@@ -25,7 +25,9 @@ class PostgreSQLIdempotencyRequestRepository:
         return idempotency_request is not None
 
     async def get(self, scope: str, key: str) -> IdempotencyRequestDTO:
-        stmt = select(IdempotencyRequestModel).where(IdempotencyRequestModel.scope == scope, IdempotencyRequestModel.key == key)
+        stmt = select(IdempotencyRequestModel).where(
+            IdempotencyRequestModel.scope == scope, IdempotencyRequestModel.key == key
+        )
         result = await self._session.execute(stmt)
         idempotency_request = result.scalar_one_or_none()
         return IdempotencyRequestDTO(

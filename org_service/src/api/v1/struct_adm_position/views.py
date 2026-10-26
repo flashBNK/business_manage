@@ -1,11 +1,10 @@
 from uuid import UUID
 
-from api.v1.position.models import PositionListSchema
 from domain.position.exceptions import PositionNotFound
 from domain.struct_adm.exceptions import StructAdmNotFound
 from domain.struct_adm_position.models import CreateStructAdmPositionDTO, StructAdmPositionDTO
 from domain.token.models import MemberRoles, TokenDTO
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, Response
 from uscases.struct_adm_position.create.abstract import AbstractCreateStructAdmPositionUseCase
 from uscases.struct_adm_position.delete.abstract import AbstractDeleteStructAdmPositionUseCase
@@ -46,19 +45,23 @@ async def list_struct_adm_positions(
     _request: Request,
     company_id: UUID,
     struct_adm_id: UUID,
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     usecase: AbstractListStructAdmPositionUseCase = Depends(list_struct_adm_position_use_case),
     _token: TokenDTO = Depends(require_company_role(MemberRoles.MEMBER)),
 ) -> JSONResponse:
     try:
-        struct_adm_positions = await usecase.execute(company_id=company_id, struct_adm_id=struct_adm_id)
+        positions_page = await usecase.execute(
+            company_id=company_id, struct_adm_id=struct_adm_id, limit=limit, offset=offset
+        )
     except StructAdmNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
 
-    content = PositionListSchema(
-        total=len(struct_adm_positions),
-        positions=[
-            _to_schema(struct_adm_position).model_dump(mode="json") for struct_adm_position in struct_adm_positions
-        ],
+    content = StructAdmPositionListSchema(
+        total=positions_page.total,
+        positions=[_to_schema(position).model_dump(mode="json") for position in positions_page.positions],
+        limit=positions_page.limit,
+        offset=positions_page.offset,
     )
 
     return JSONResponse(content.model_dump(mode="json"), status_code=status.HTTP_200_OK)

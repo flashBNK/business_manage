@@ -4,15 +4,26 @@ from domain.task.exceptions import ParticipantInactive, ParticipantNotFound, Par
 from infrastructure.repositories.postgresql.uow import PostgreSQLTasksUnitOfWork
 
 
-async def check_participant(user_id: UUID, company_id: UUID, uow: PostgreSQLTasksUnitOfWork) -> None:
-    participant = await uow.users_replica.get(user_id)
+async def check_participant(user_ids: list[UUID], company_id: UUID, uow: PostgreSQLTasksUnitOfWork) -> None:
+    unique_ids = list(dict.fromkeys(user_ids))
 
-    if participant is None:
-        raise ParticipantNotFound
-    if not participant.is_active:
-        raise ParticipantInactive
-    if participant.company_id != company_id:
-        raise ParticipantWrongCompany
+    if not unique_ids:
+        return
+
+    participants = await uow.users_replica.list_by_ids(user_ids=unique_ids)
+    participants_by_id = {participant.id: participant for participant in participants}
+
+    for user_id in unique_ids:
+        participant = participants_by_id.get(user_id)
+
+        if participant is None:
+            raise ParticipantNotFound
+
+        if not participant.is_active:
+            raise ParticipantInactive
+
+        if participant.company_id != company_id:
+            raise ParticipantWrongCompany
 
 
 async def validate_participant(
@@ -23,6 +34,6 @@ async def validate_participant(
     company_id: UUID,
     uow: PostgreSQLTasksUnitOfWork,
 ) -> None:
-    user_ids = {author_id, responsible_id, *watcher_ids, *assignee_ids}
-    for user_id in user_ids:
-        await check_participant(user_id, company_id, uow)
+    await check_participant(
+        user_ids=[author_id, responsible_id, *watcher_ids, *assignee_ids], company_id=company_id, uow=uow
+    )

@@ -21,3 +21,11 @@ class PositionDTO:
     company_id: UUID
     name: str
     description: str | None = None
+
+
+@dataclass(slots=True)
+class ListResponsePositionDTO:
+    total: int
+    positions: list[PositionDTO]
+    limit: int
+    offset: int

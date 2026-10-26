@@ -13,7 +13,7 @@ from domain.users_position.models import (
     UsersPositionDTO,
 )
 from domain.users_replica.exceptions import UsersReplicaNotFound
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.exc import IntegrityError
 from uscases.users_position.create.abstract import AbstractCreateUsersPositionUseCase
@@ -73,20 +73,30 @@ async def list_by_struct_adm(
     company_id: UUID,
     struct_adm_id: UUID,
     include_children: bool = False,
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     usecase: AbstractListUsersPositionByStructAdmUseCase = Depends(list_users_position_by_struct_adm_use_case),
     _token: TokenDTO = Depends(require_company_role(MemberRoles.MEMBER)),
 ) -> JSONResponse:
     try:
-        employees, struct_adm = await usecase.execute(
-            company_id=company_id, struct_adm_id=struct_adm_id, include_children=include_children
+        employees_page, struct_adm = await usecase.execute(
+            company_id=company_id,
+            struct_adm_id=struct_adm_id,
+            include_children=include_children,
+            limit=limit,
+            offset=offset,
         )
-    except (PositionNotFound, StructAdmNotFound) as exc:
+    except StructAdmNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
 
     content = UsersPositionListSchema(
         struct_adm=_to_schema_struct_adm(struct_adm).model_dump(mode="json"),
-        total=len(employees),
-        employees=[_to_schema_employee_position(employee).model_dump(mode="json") for employee in employees],
+        total=employees_page.total,
+        employees=[
+            _to_schema_employee_position(employee).model_dump(mode="json") for employee in employees_page.employees
+        ],
+        limit=employees_page.limit,
+        offset=employees_page.offset,
     )
 
     return JSONResponse(content.model_dump(mode="json"), status_code=status.HTTP_200_OK)

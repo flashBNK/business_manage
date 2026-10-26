@@ -11,7 +11,12 @@ class AbstractStructAdmPositionRepository(
     AbstractRepository[StructAdmPositionDTO, UUID, CreateStructAdmPositionDTO], ABC
 ):
     @abstractmethod
-    async def list_by_struct_adm_id(self, struct_adm_id: UUID) -> list[StructAdmPositionDTO]:
+    async def list_by_struct_adm_id(
+        self,
+        struct_adm_id: UUID,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[StructAdmPositionDTO], int]:
         raise InvalidRequestStructAdmPosition
 
     @abstractmethod

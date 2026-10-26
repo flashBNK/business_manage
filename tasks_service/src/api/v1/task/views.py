@@ -1,11 +1,16 @@
 from uuid import UUID
 
 from domain.idempotency.exceptions import IdempotencyConflict
-from domain.task.exceptions import ParticipantInactive, ParticipantNotFound, ParticipantWrongCompany, TaskNotFound, \
-    InvalidTaskStatusTransition
+from domain.task.exceptions import (
+    InvalidTaskStatusTransition,
+    ParticipantInactive,
+    ParticipantNotFound,
+    ParticipantWrongCompany,
+    TaskNotFound,
+)
 from domain.task.models import ChangeStatusTaskDTO, CreateTaskDTO, TaskDTO, UpdateTaskDTO
 from domain.token.models import MemberRoles, TokenDTO
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, Response
 from usecases.task.change_status.abstract import AbstractChangeStatusTaskUseCase
 from usecases.task.create.abstract import AbstractCreateTaskUseCase
@@ -93,14 +98,21 @@ async def get_task(
 async def list_task(
     _request: Request,
     company_id: UUID,
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     usecase: AbstractListTaskUseCase = Depends(list_task_use_case),
     _token: TokenDTO = Depends(require_company_role(MemberRoles.MEMBER)),
 ) -> JSONResponse:
-    tasks = await usecase.execute(company_id=company_id)
+    list_tasks = await usecase.execute(company_id=company_id, limit=limit, offset=offset)
 
     content = ListTaskSchema(
-        total=len(tasks),
-        tasks=[_to_schema(task.task, task.watcher_ids, task.assignee_ids).model_dump(mode="json") for task in tasks],
+        total=list_tasks.total,
+        tasks=[
+            _to_schema(task.task, task.watcher_ids, task.assignee_ids).model_dump(mode="json")
+            for task in list_tasks.tasks
+        ],
+        limit=list_tasks.limit,
+        offset=list_tasks.offset,
     )
 
     return JSONResponse(content.model_dump(mode="json"), status_code=status.HTTP_200_OK)

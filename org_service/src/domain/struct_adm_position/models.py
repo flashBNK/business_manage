@@ -11,3 +11,11 @@ class CreateStructAdmPositionDTO:
 @dataclass(slots=True)
 class StructAdmPositionDTO(CreateStructAdmPositionDTO):
     pass
+
+
+@dataclass(slots=True)
+class ListResponseStructAdmPositionDTO:
+    total: int
+    positions: list[StructAdmPositionDTO]
+    limit: int
+    offset: int

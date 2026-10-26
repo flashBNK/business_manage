@@ -9,7 +9,7 @@ from .models import CreatePositionDTO, PositionDTO, UpdatePositionDTO
 
 class AbstractPositionRepository(AbstractRepository[PositionDTO, UUID, CreatePositionDTO], ABC):
     @abstractmethod
-    async def list(self, company_id: UUID) -> list[PositionDTO]:
+    async def list_paginated(self, company_id: UUID, limit: int, offset: int) -> tuple[list[PositionDTO], int]:
         raise PositionNotFound
 
     @abstractmethod

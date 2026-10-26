@@ -29,6 +29,57 @@ async def handle_employee_upsert(event: EventEnvelopeDTO, uow: PostgreSQLTasksUn
     log.info("user successfully added to the database", payload=payload)
 
 
+async def create_welcome_task(event: EventEnvelopeDTO, uow: PostgreSQLTasksUnitOfWork) -> None:
+    user_id = UUID(event.payload["user_id"])
+    company_id = UUID(event.payload["company_id"])
+
+    await validate_participant(
+        author_id=user_id,
+        responsible_id=user_id,
+        company_id=company_id,
+        watcher_ids=[],
+        assignee_ids=[user_id],
+        uow=uow,
+    )
+
+    dto = CreateTaskDTO(
+        title="Welcome!",
+        description="Initialization.",
+        deadline=datetime.now(UTC) + timedelta(days=7),
+        responsible_id=user_id,
+        author_id=user_id,
+        company_id=company_id,
+        estimated_minutes=30,
+        watcher_ids=[],
+        assignee_ids=[user_id],
+    )
+
+    task = await uow.task.create(dto=dto)
+
+    await uow.task_assignees.create(dto=CreateTaskAssigneesDTO(task_id=task.id, user_id=user_id))
+
+    await uow.outbox_event.create(
+        CreateOutboxEventDTO(
+            event_type=OutboxEventType.TASK_CREATED,
+            aggregate_id=task.id,
+            correlation_id=event.correlation_id,
+            causation_id=event.event_id,
+            payload={
+                "title": task.title,
+                "description": task.description,
+                "author_id": str(task.author_id),
+                "responsible_id": str(task.responsible_id),
+                "company_id": str(task.company_id),
+                "deadline": task.deadline.isoformat() if task.deadline else None,
+                "status": task.status,
+                "estimated_minutes": task.estimated_minutes,
+                "assignee_ids": [str(user_id)],
+                "watcher_ids": [],
+            },
+        )
+    )
+
+
 async def handle_registration_tasks_provision(event: EventEnvelopeDTO, uow: PostgreSQLTasksUnitOfWork) -> None:
     payload = event.payload
 
@@ -47,51 +98,7 @@ async def handle_registration_tasks_provision(event: EventEnvelopeDTO, uow: Post
     await uow.users_replica.upsert(dto=user_replica)
 
     try:
-        await validate_participant(
-            author_id=user_id,
-            responsible_id=user_id,
-            company_id=company_id,
-            watcher_ids=[],
-            assignee_ids=[user_id],
-            uow=uow,
-        )
-
-        task_dto = CreateTaskDTO(
-            title="Welcome!",
-            description="Initialization.",
-            deadline=datetime.now(UTC) + timedelta(days=7),
-            responsible_id=user_id,
-            author_id=user_id,
-            company_id=company_id,
-            estimated_minutes=30,
-            watcher_ids=[],
-            assignee_ids=[user_id],
-        )
-
-        task = await uow.task.create(dto=task_dto)
-
-        await uow.task_assignees.create(dto=CreateTaskAssigneesDTO(task_id=task.id, user_id=user_id))
-
-        await uow.outbox_event.create(
-            CreateOutboxEventDTO(
-                event_type=OutboxEventType.TASK_CREATED,
-                aggregate_id=task.id,
-                correlation_id=event.correlation_id,
-                causation_id=event.event_id,
-                payload={
-                    "title": task.title,
-                    "description": task.description,
-                    "author_id": str(task.author_id),
-                    "responsible_id": str(task.responsible_id),
-                    "company_id": str(task.company_id),
-                    "deadline": task.deadline.isoformat() if task.deadline else None,
-                    "status": task.status,
-                    "estimated_minutes": task.estimated_minutes,
-                    "assignee_ids": [str(user_id)],
-                    "watcher_ids": [],
-                },
-            )
-        )
+        await create_welcome_task(event=event, uow=uow)
 
         await uow.outbox_event.create(
             CreateOutboxEventDTO(
@@ -130,6 +137,13 @@ async def handle_registration_tasks_provision(event: EventEnvelopeDTO, uow: Post
         )
 
 
+async def handle_employee_created(event: EventEnvelopeDTO, uow: PostgreSQLTasksUnitOfWork) -> None:
+    await handle_employee_upsert(event=event, uow=uow)
+
+    if event.payload.get("role") == "owner" and event.payload["is_active"]:
+        await create_welcome_task(event=event, uow=uow)
+
+
 async def handle_employee_registration_failed(event: EventEnvelopeDTO, uow: PostgreSQLTasksUnitOfWork) -> None:
     await uow.users_replica.deactivate(
         users_replica_id=UUID(event.payload["user_id"]),
@@ -139,7 +153,7 @@ async def handle_employee_registration_failed(event: EventEnvelopeDTO, uow: Post
 
 
 EVENT_HANDLERS = {
-    "employee.created": handle_employee_upsert,
+    "employee.created": handle_employee_created,
     "employee.registered": handle_employee_upsert,
     "registration.tasks.provision": handle_registration_tasks_provision,
     "employee.registration.failed": handle_employee_registration_failed,

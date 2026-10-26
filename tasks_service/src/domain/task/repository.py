@@ -9,7 +9,7 @@ from .models import ChangeStatusTaskDTO, CreateTaskDTO, TaskDTO, UpdateTaskDTO
 
 class AbstractTaskRepository(AbstractRepository[TaskDTO, UUID, CreateTaskDTO], ABC):
     @abstractmethod
-    async def list_by_company(self, company_id: UUID) -> list[TaskDTO]:
+    async def list_by_company(self, company_id: UUID, limit: int, offset: int) -> tuple[list[TaskDTO], int]:
         raise TaskNotFound
 
     @abstractmethod
