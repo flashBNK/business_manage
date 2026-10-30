@@ -46,6 +46,6 @@ class CreateOutboxEventDTO:
     event_type: OutboxEventType
     payload: dict
     aggregate_id: uuid.UUID
-    correlation_id: uuid.UUID | None = uuid.uuid4()
+    correlation_id: uuid.UUID | None = None
     causation_id: uuid.UUID | None = None
     schema_version: int = 1

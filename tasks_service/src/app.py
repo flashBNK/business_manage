@@ -4,8 +4,10 @@ from contextlib import asynccontextmanager
 
 from api.v1.routers import router
 from container import Container
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
+
+from infrastructure.correlation import CorrelationIdMiddleware
 from infrastructure.kafka.consumer.consumer_loop import run_event_consumer
 from infrastructure.kafka.producer.producer_loop import run_outbox_relay
 from logger import get_logger, setup_logging
@@ -52,7 +54,11 @@ async def lifespan(app: FastAPI):
         log.info("applications shutdown")
 
 
-app = FastAPI(lifespan=lifespan)
+async def correlation_header(_value: str | None = Header(default=None, alias="X-Correlation-ID")) -> None:
+    pass
+
+
+app = FastAPI(lifespan=lifespan, dependencies=[Depends(correlation_header)],)
 
 app.add_middleware(
     CORSMiddleware,
@@ -60,6 +66,9 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Correlation-ID"],
 )
+
+app.add_middleware(CorrelationIdMiddleware)
 
 app.include_router(router)

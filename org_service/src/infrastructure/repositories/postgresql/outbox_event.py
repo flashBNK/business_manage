@@ -5,6 +5,7 @@ from uuid import UUID
 from domain.outbox_event.dedup_key import compute_dedup_key
 from domain.outbox_event.models import CreateOutboxEventDTO, OutboxEventDTO, OutboxEventType
 from domain.outbox_event.repository import AbstractOutboxEventRepository
+from infrastructure.correlation import get_correlation_id
 from infrastructure.databases.postgresql.models.outbox_event import OutboxEvent as OutboxEventModel
 from sqlalchemy import select, tuple_, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,11 +19,13 @@ class PostgreSQLOutboxEventRepository(AbstractOutboxEventRepository):
         self._session = session
 
     async def create(self, dto: CreateOutboxEventDTO) -> OutboxEventDTO:
+        correlation_id = (get_correlation_id() or dto.correlation_id or uuid.uuid4())
+
         dedup_key = compute_dedup_key(
             event_type=dto.event_type,
             aggregate_id=dto.aggregate_id,
             payload=dto.payload,
-            correlation_id=dto.correlation_id,
+            correlation_id=correlation_id,
         )
 
         db_outbox_event = OutboxEventModel(
@@ -30,7 +33,7 @@ class PostgreSQLOutboxEventRepository(AbstractOutboxEventRepository):
             payload=dto.payload,
             aggregate_id=dto.aggregate_id,
             schema_version=dto.schema_version,
-            correlation_id=dto.correlation_id or uuid.uuid4(),
+            correlation_id=correlation_id,
             causation_id=dto.causation_id,
             dedup_key=dedup_key,
             producer=SERVICE_NAME,

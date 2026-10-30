@@ -2,6 +2,7 @@ import asyncio
 
 from domain.inbox_event.models import CreateInboxEventDTO
 from domain.kafka.models import EventEnvelopeDTO, ProcessingResult
+from infrastructure.correlation import correlation_context
 from infrastructure.databases.postgresql.session_manager import DatabaseSessionManager
 from infrastructure.di.injection import build_unit_of_work
 from logger import get_logger
@@ -13,6 +14,21 @@ BASE_RETRY_DELAY = 1.0
 
 
 async def process_event_with_retry(
+    event: EventEnvelopeDTO,
+    handler,
+    session_manager: DatabaseSessionManager,
+    consumer_name: str,
+) -> ProcessingResult:
+    with correlation_context(event.correlation_id):
+        return await _process_event_with_retry(
+            event=event,
+            handler=handler,
+            session_manager=session_manager,
+            consumer_name=consumer_name,
+        )
+
+
+async def _process_event_with_retry(
     event: EventEnvelopeDTO,
     handler,
     session_manager: DatabaseSessionManager,
