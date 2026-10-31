@@ -2,6 +2,8 @@ import asyncio
 import contextlib
 from contextlib import asynccontextmanager
 
+from sqlalchemy import text
+
 from api.v1.routers import router
 from container import Container
 from fastapi import FastAPI, Depends, Header
@@ -26,6 +28,10 @@ async def lifespan(app: FastAPI):
     sessionmanager = container.session_manager()
     sessionmanager.init(settings.database.get_database_url())
 
+    async with asyncio.timeout(5):
+        async with sessionmanager.session() as session:
+            await session.execute(text("SELECT 1"))
+
     container.wire(
         modules=[
             "infrastructure.databases.postgresql.session",
@@ -37,6 +43,8 @@ async def lifespan(app: FastAPI):
     kafka_producer = container.kafka_producer()
     await kafka_consumer.start()
     await kafka_producer.start()
+
+    log.info("PostgreSQL and Kafka are ready, starting the workers.")
 
     consumer_task = asyncio.create_task(run_event_consumer(consumer=kafka_consumer, session_manager=sessionmanager))
     relay_task = asyncio.create_task(run_outbox_relay(producer=kafka_producer, session_manager=sessionmanager))
