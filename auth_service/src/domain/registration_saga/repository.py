@@ -27,3 +27,7 @@ class AbstractRegistrationSagaRepository(
 
     async def mark_timeout(self, saga_id: uuid.UUID, last_error: str) -> None:
         raise RegistrationSagaNotFound
+
+    @abstractmethod
+    async def get_latest(self, user_id: uuid.UUID, company_id: uuid.UUID) -> RegistrationSagaDTO | None:
+        raise NotImplementedError

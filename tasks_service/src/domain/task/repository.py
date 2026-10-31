@@ -19,3 +19,7 @@ class AbstractTaskRepository(AbstractRepository[TaskDTO, UUID, CreateTaskDTO], A
     @abstractmethod
     async def change_status(self, dto: ChangeStatusTaskDTO, task_id: UUID) -> TaskDTO:
         raise TaskNotFound
+
+    @abstractmethod
+    async def get_for_update(self, task_id: UUID, company_id: UUID) -> TaskDTO | None:
+        raise NotImplementedError

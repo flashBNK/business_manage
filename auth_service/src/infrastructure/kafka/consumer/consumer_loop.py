@@ -66,7 +66,7 @@ async def run_event_consumer(consumer: KafkaEventConsumer, session_manager: Data
                     "Error processing Kafka message",
                     topic=message.topic,
                     partition=message.partition,
-                    offset=message.offset,
+                    offset=message.offset
                 )
 
                 topic_partition = TopicPartition(message.topic, message.partition)
@@ -139,7 +139,12 @@ async def process_message(consumer: KafkaEventConsumer, session_manager: Databas
                 inbox_event_id=event.event_id, consumer_name=CONSUMER_NAME
             )
             if already_processed is not None:
-                log.info("Kafka event already processed", event_id=event.event_id, event_type=event.event_type)
+                log.info(
+                    "Kafka event already processed",
+                    event_id=event.event_id,
+                    event_type=event.event_type,
+                    correlation_id=str(event.correlation_id)
+                )
                 await consumer.commit_message(message=message)
                 return
 
@@ -150,6 +155,7 @@ async def process_message(consumer: KafkaEventConsumer, session_manager: Databas
             "No handler for Kafka event",
             event_id=event.event_id,
             event_type=event.event_type,
+            correlation_id=str(event.correlation_id)
         )
         return await consumer.commit_message(message=message)
 
@@ -164,6 +170,7 @@ async def process_message(consumer: KafkaEventConsumer, session_manager: Databas
         "Kafka event failed after all retry attempts",
         event_id=event.event_id,
         event_type=event.event_type,
+        correlation_id=str(event.correlation_id)
     )
 
     await save_failed_message(

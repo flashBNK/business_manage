@@ -20,19 +20,36 @@
 
 Через Kafka.
 
-- **Transactional outbox** - событие пишется в таблицу outbox_event в одной транзакции с бизнес-данными, фоновый relay публикует его в Kafka и проставляет "published_at".
-- **Inbox** - консьюмер записывает "(consumer_name, event_id)" в "inbox_event" в одной транзакции с применением изменений, что делает его идемпотентным.
-- **Envelope** - конверт события: "event_id", "event_type", "aggregate_id", "correlation_id", "causation_id", "occurred_at", "schema_version" "producer" и "payload".
-- **Партиционирование** по "aggregate_id" - события одной сущности обрабатываются строго по порядку.
+- **Transactional outbox** - событие пишется в таблицу "outbox_event" в одной транзакции с бизнес-данными. Фоновый relay публикует его в Kafka и фиксирует "published_at". При ошибке публикация повторяется. Если процесс упадёт после отправки, но до сохранения "published_at", то событие отправится повторно.
+- **Inbox** - консьюмер записывает "(consumer_name, event_id)" в "inbox_event" в одной транзакции с применением изменений. Повторно доставленное событие с тем же "event_id" пропускается.
+- **Envelope** - конверт события: "event_id", "event_type", "aggregate_id", "correlation_id", "causation_id", "occurred_at", "schema_version", "producer" и "payload".
+- **Порядок событий** - relay выбирает самое раннее неопубликованное событие каждого "aggregate_id" по "(occurred_at, event_id)". Kafka сохраняет порядок записей внутри одной партиции одного топика.
 - **Реплики** - org_service и tasks_service держат у себя минимальные копии данных о пользователях, компаниях, наполняемые auth_service.
 
 JWT подписывается приватным ключом только auth_service, остальные сервисы умеют только проверять подпись.
 
-### Сага регистрации
+### Сага онбординга приглашённого сотрудника
 
-Регистрация компании - распределённая транзакция с компенсацией. auth_service - оркестратор, состояние хранится в таблице "registration_saga".
+auth_service - оркестратор, состояние хранится в "registration_saga". После подтверждения инвайта, публикуется "employee.registered" и запускается сага:
 
-Если любой шаг падает, оркестратор рассылает компенсирующие команды ("registration.org.compensate"), откатывая созданные данные в остальных сервисах.
+1. auth_service отправляет "registration.org.provision". org_service назначает сотрудника на должность в подразделении и отвечает "registration.org.completed".
+2. auth_service отправляет "registration.tasks.provision". tasks_service создаёт задачу "Welcome!" и отвечает "registration.tasks.completed".
+3. auth_service активирует участие сотрудника в компании, завершает сагу и публикует "registration.completed" и "employee.activated".
+
+Статусы:
+
+- "started" - ожидается org_service.
+- "org_completed" - назначение создано, ожидается tasks_service.
+- "completed" - таска создана, участие в компании активировано.
+- "compensating" - ожидается отмена назначения в org_service после отказа tasks_service.
+- "failed" - онбординг упал, компенсация в auth_service выполнена.
+- "timed_out" - истёк срок ожидания.
+
+Компенсации:
+
+- При "registration.org.failed" auth_service отзывает инвайт, оставляет участие сотрудника неактивным и переводит сагу из "started" в "failed".
+- При "registration.tasks.failed" org_service удаляет назначение сотрудника. Auth_service отзывает инвайт, деактивирует участие и переводит сагу в "failed".
+
 
 ## Стек
 

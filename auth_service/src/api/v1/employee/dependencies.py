@@ -10,6 +10,7 @@ from usecases.auth.employees.complete_invite.implementation import (
 from usecases.auth.employees.create.implementation import (
     PostgreSQLCreateEmployeeUseCase,
 )
+from usecases.registration.get_onboarding_status.implementation import PostgreSQLGetOnboardingStatusUseCase
 
 
 def get_unit_of_work(
@@ -29,3 +30,10 @@ def complete_employee_invite_use_case(
     uow = get_unit_of_work(session=session)
     token_service = Container.token_service()
     return PostgreSQLCompleteEmployeeInviteUseCase(uow=uow, token_service=token_service)
+
+
+def get_onboarding_status_use_case(
+    session: AsyncSession = Depends(get_async_session),
+):
+    uow = get_unit_of_work(session=session)
+    return PostgreSQLGetOnboardingStatusUseCase(uow=uow)

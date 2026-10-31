@@ -49,6 +49,23 @@ class PostgreSQLTaskRepository(AbstractTaskRepository):
 
         return self._to_domain(task)
 
+
+    async def get_for_update(self, task_id: UUID, company_id: UUID) -> TaskDTO | None:
+        stmt = (
+            self._active_query()
+            .where(TaskModel.id == task_id, TaskModel.company_id == company_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        result = await self._session.execute(stmt)
+        task = result.scalar_one_or_none()
+
+        if task is None:
+            return None
+
+        return self._to_domain(task)
+
+
     async def list_by_company(self, company_id: UUID, limit: int, offset: int) -> tuple[list[TaskDTO], int]:
         total_stmt = (
             select(func.count())

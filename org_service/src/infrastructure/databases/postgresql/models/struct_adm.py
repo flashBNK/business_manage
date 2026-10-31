@@ -10,7 +10,7 @@ from ..base import Base
 class StructAdm(Base):
     __tablename__ = "struct_adm"
 
-    __table_args__ = (Index("index_struct_adm_path_gist", "path", postgresql_using="gist"),)
+    __table_args__ = (Index("ix_struct_adm_path_gist", "path", postgresql_using="gist"),)
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("company_replica.id"), nullable=False, index=True)

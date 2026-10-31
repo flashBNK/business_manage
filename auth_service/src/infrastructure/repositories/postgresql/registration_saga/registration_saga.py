@@ -53,6 +53,23 @@ class PostgreSQLRegistrationSagaRepository(AbstractRegistrationSagaRepository):
 
         return self._to_domain(saga)
 
+
+    async def get_latest(self, user_id: uuid.UUID, company_id: uuid.UUID) -> RegistrationSagaDTO | None:
+        stmt = (
+            select(RegistrationSagaModel)
+            .where(RegistrationSagaModel.user_id == user_id, RegistrationSagaModel.company_id == company_id)
+            .order_by(RegistrationSagaModel.created_at.desc(), RegistrationSagaModel.id.desc())
+            .limit(1)
+        )
+        result = await self._session.execute(stmt)
+        saga = result.scalar_one_or_none()
+
+        if saga is None:
+            return None
+
+        return self._to_domain(saga)
+
+
     async def update_status(
         self,
         saga_id: uuid.UUID,

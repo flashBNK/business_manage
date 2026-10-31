@@ -5,6 +5,7 @@ from domain.invite.exceptions import InvalidOrExpiredCode, InviteAlreadyUsed
 from domain.invite.models import CompleteEmployeeInviteDTO
 from domain.member.exceptions import MemberAlreadyActivated
 from domain.member.models import CreateEmployeeDTO
+from domain.registration_saga.exceptions import RegistrationSagaNotFound
 from domain.token.models import TokenDTO
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
@@ -13,15 +14,17 @@ from usecases.auth.employees.complete_invite.abstract import (
     AbstractCompleteEmployeeInviteUseCase,
 )
 from usecases.auth.employees.create.abstract import AbstractCreateEmployeeUseCase
+from usecases.registration.get_onboarding_status.abstract import AbstractGetOnboardingStatusUseCase
 
 from ..account.models import LoginResultSchema
 from ..authorization import require_company_role
-from .dependencies import complete_employee_invite_use_case, create_employee_use_case
+from .dependencies import complete_employee_invite_use_case, create_employee_use_case, get_onboarding_status_use_case
 from .models import (
     CompleteEmployeeInviteSchema,
     CreateEmployeeResultSchema,
-    CreateEmployeeSchema,
+    CreateEmployeeSchema, OnboardingStatusSchema,
 )
+from ..token_dependencies import get_current_token
 
 router = APIRouter()
 
@@ -75,3 +78,28 @@ async def invite_complete(
     result_schema = LoginResultSchema(access_token=result.access_token, refresh_token=result.refresh_token)
 
     return JSONResponse(result_schema.model_dump(mode="json"), status_code=status.HTTP_201_CREATED)
+
+
+@router.get("/me/onboarding", response_model=OnboardingStatusSchema)
+async def get_onboarding_status(
+    _request: Request,
+    company_id: uuid.UUID,
+    token: TokenDTO = Depends(get_current_token),
+    usecase: AbstractGetOnboardingStatusUseCase = Depends(get_onboarding_status_use_case)
+) -> JSONResponse:
+    try:
+        saga = await usecase.execute(user_id=token.subject, company_id=company_id)
+    except RegistrationSagaNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from None
+
+    content = OnboardingStatusSchema(
+        saga_id=saga.id,
+        company_id=saga.company_id,
+        status=saga.status,
+        correlation_id=saga.correlation_id,
+        deadline_at=saga.deadline_at,
+        last_error=saga.last_error,
+        updated_at=saga.updated_at,
+    )
+
+    return JSONResponse(content.model_dump(mode="json"), status_code=status.HTTP_200_OK)

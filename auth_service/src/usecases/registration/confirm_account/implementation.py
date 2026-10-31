@@ -26,7 +26,7 @@ class PostgreSQLConfirmAccountUseCase(AbstractConfirmAccountUseCase):
         async with self._uow as uow:
             invite = await uow.invite.get_by_email(dto.email)
             log.info("Проверка", invite=invite)
-            if not invite or invite.expires_at < datetime.datetime.now(datetime.UTC):
+            if not invite or invite.expires_at < datetime.datetime.now(datetime.UTC) or invite.status != InviteStatus.PENDING:
                 raise InvalidOrExpiredCode
             if invite.attempts >= MAX_ATTEMPTS:
                 raise TooManyAttempts

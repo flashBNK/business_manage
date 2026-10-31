@@ -30,7 +30,11 @@ async def run_outbox_relay(producer: KafkaEventProducer, session_manager: Databa
                 for event in events:
                     topic = TOPIC_EVENT_TYPE.get(event.event_type)
                     if topic is None:
-                        log.warning("No topic for events", event_type=event.event_type)
+                        log.warning(
+                            "No topic for events",
+                            event_type=event.event_type,
+                            correlation_id=str(event.correlation_id)
+                        )
                         continue
 
                     try:
@@ -40,7 +44,11 @@ async def run_outbox_relay(producer: KafkaEventProducer, session_manager: Databa
                             event=event,
                         )
                     except Exception:
-                        log.exception("Failed to publish the event", event_id=str(event.event_id))
+                        log.exception(
+                            "Failed to publish the event",
+                            event_id=str(event.event_id),
+                            correlation_id=str(event.correlation_id)
+                        )
                         continue
 
                     await repo.mark_published(event.event_id)
